@@ -1,0 +1,243 @@
+/* Sidebar */
+.sidebar {
+  width: 80px;
+  padding: 10px;
+  background-color: var(--section-color);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 4px 8px 12px rgba(0, 0, 0, 0.1);
+  position: fixed; /* Keep sidebar fixed on the left side */
+  top: 50px;
+  left: 0;
+  bottom: 0;
+  transition: width 0.3s ease-in-out;
+  z-index: 100; /* Ensure sidebar stays on top */
+  height: calc(100% - 50px);
+  overflow-x: hidden;
+}
+body.arabic .sidebar {
+  right: 0;
+  left: auto;
+  box-shadow: -4px 8px 12px rgba(0, 0, 0, 0.1);
+}
+/* Sidebar items (icons and text) */
+.sidebar-icons {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.icon-text {
+  font-size: 18px;
+  color: #0a0a0a;
+  display: block;
+  align-items: start;
+  justify-content: center;
+}
+
+.icon-text span {
+  font-size: 18px;
+  color: #fff;
+  display: block;
+  align-items: start;
+  justify-content: center;
+}
+
+.sidebar-icons li {
+  cursor: pointer;
+  font-size: 24px;
+  color: #ccc;
+  transition: color 0.3s ease, transform 0.3s ease;
+  width: 100%;
+  padding: 0;
+  justify-content: center;
+  margin: 0;
+}
+
+.sidebar-icons li:hover,
+.sidebar-icons li:has(.active-tab) {
+  transform: scale(1.1);
+  background: var(--main-color);
+}
+.sidebar-icons li:has(.active-tab) i,
+.sidebar-icons li:hover i {
+  color: white;
+  opacity: 1;
+}
+
+.nav-link {
+  display: flex;
+  text-decoration: none;
+  padding: 10px;
+}
+
+/* Sidebar icons size */
+.sidebar-icons i {
+  font-size: 20px;
+  color: var(--font-color);
+  transition: 0.3s ease;
+  opacity: 0.5;
+}
+/* Active tab style */
+.active-tab i {
+  opacity: 1;
+}
+
+/* Sidebar text */
+.sidebar-icons span {
+  display: none;
+  font-size: 18px;
+  margin-left: 5px;
+  line-height: 1;
+  color: var(--font-color);
+  transition: 0.3s ease;
+  opacity: 0.5;
+}
+.active-tab span {
+  opacity: 1;
+}
+
+/* Add transition effect when sidebar expands */
+
+/* Content area */
+.dashboard-container {
+  display: flex;
+  min-height: calc(100vh + 0px);
+}
+
+.main-content {
+  width: 100%;
+  background-color: transparent;
+  box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.05);
+  transition: margin-left 0.3s ease;
+  margin: 50px 0px 0px 0px;
+  display: flex;
+  justify-content: flex-end;
+  z-index: 1;
+}
+
+/* Styling for the active tab content (Overview) */
+.overview {
+  height: 100%;
+  width: calc(100% - 70px);
+  padding: 20px;
+  background-color: var(--section-transparent-color);
+  color: var(--font-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  backdrop-filter: blur(10px);
+}
+
+/* Heading styles for content */
+.overview h2 {
+  font-size: 26px;
+  color: var(--font-color);
+  margin-bottom: 10px;
+  margin-top: 15px;
+  font-weight: 600;
+}
+
+/* Content layout */
+.overview-content {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.overview-item {
+  flex: 1;
+  background-color: transparent;
+  color: var(--font-color);
+  padding: 25px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: var(--box-shadow);
+  transition: transform 0.3s ease;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+.overview-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  transition: 0.4s;
+  height: 100%;
+  width: 0;
+  background-color: var(--section-color);
+}
+.overview-item:hover:before {
+  width: 100%;
+}
+
+.overview-item i {
+  color: var(--main-color);
+  font-size: 28px;
+}
+
+.overview-item h3 {
+  font-size: 20px;
+  color: var(--font-color);
+  margin: 10px 0;
+}
+.icon-header i {
+  cursor: pointer;
+}
+.icon-header {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .overview-content {
+    flex-direction: column;
+  }
+
+  .icon-header {
+    display: block;
+  }
+  .overview {
+    width: calc(100% - 0px);
+    padding: 10px 5px;
+  }
+  .sidebar {
+    left: -100% !important;
+    width: 200px;
+    transition: 0.4s;
+    opacity: 0;
+  }
+  .active-sidebar {
+    left: 0 !important;
+    opacity: 1;
+  }
+  .overview-item {
+    margin: 10px;
+  }
+  .pad-40 {
+    padding: 40px 3%;
+  }
+  .active-sidebar {
+    left: 0 !important;
+    width: 200px;
+  }
+  .active-sidebar span {
+    display: block !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .statusText {
+    font-size: 13px;
+    font-weight: bold;
+    color: #333;
+  }
+}

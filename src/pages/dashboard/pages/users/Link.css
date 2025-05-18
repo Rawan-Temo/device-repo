@@ -1,0 +1,86 @@
+.container {
+  max-width: 500px;
+  margin: 40px auto;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+h2 {
+  margin-bottom: 15px;
+  color: var(--font-color);
+}
+
+.message {
+  color: green;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.form-group {
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+
+select {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  outline: none;
+}
+
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+  gap: 10px;
+}
+.button-group button {
+  width: 100%;
+}
+
+button {
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.remove-btn {
+  background-color: #dc3545 !important;
+  color: white !important;
+}
+
+.remove-btn:hover {
+  background-color: #c82333;
+}
+
+@media (max-width: 480px) {
+  .container {
+    max-width: 90%;
+  }
+
+  .button-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

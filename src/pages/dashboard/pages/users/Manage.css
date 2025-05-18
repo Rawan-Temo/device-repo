@@ -1,0 +1,109 @@
+/* General Styles */
+.container {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 20px;
+  text-align: center;
+  background: var(--aside-color);
+  box-shadow: var(--box-shadow);
+  border-radius: 8px;
+}
+
+/* Form Styles */
+form {
+  display: flex;
+  gap: 12px;
+}
+
+.group-form input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 16px;
+  transition: 0.3s ease-in-out;
+  flex: 1;
+  background-color: var(--section-color);
+  color: var(--font-color);
+}
+
+input:focus {
+  border-color: var(--border-color);
+  outline: none;
+  box-shadow: 0px 0px 5px rgba(0, 123, 255, 0.3);
+}
+
+button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+
+
+
+.cancel-button {
+  background-color: #6c757d;
+  color: white;
+}
+
+.cancel-button:hover {
+  background-color: #5a6268;
+}
+
+/* Groups List */
+ul {
+  list-style-type: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+li {
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.3s;
+}
+
+li:hover {
+  background: #727272;
+}
+
+.delete-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+.delete-button:hover {
+  background-color: #c82333;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .container {
+    max-width: 90%;
+    padding: 15px;
+  }
+
+  li {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+}
+
+.action-buttons-container {
+  display: flex;
+  gap: 8px; /* Adds space between buttons */
+}
+
+.title {
+  color: var(--font-color);
+}

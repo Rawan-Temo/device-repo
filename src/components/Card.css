@@ -1,0 +1,32 @@
+.devices {
+  width: 250px;
+  background-color: #333;
+  color: #fff;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.card {
+  background-color: #444;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.card h3 {
+  margin: 0 0 10px;
+  font-size: 1.2em;
+}
+
+.card p {
+  margin: 0;
+  font-size: 1em;
+  color: #ccc;
+}

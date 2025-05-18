@@ -1,0 +1,76 @@
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dialog {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  box-shadow: 0 4px 6px rgba(196, 33, 33, 0.1);
+}
+
+.dialog-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.device .tab-content .action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center content */
+  padding: 6px 15px; /* Adjusted padding */
+  background-color: #007bff;
+  font-weight: bold;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  text-align: center;
+  gap: 8px; /* Space between icon & text */
+}
+
+/* Hover Effect */
+.device .tab-content .action-button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Click/Active Effect */
+.device .tab-content .action-button:active {
+  background-color: #004494;
+  transform: scale(0.95);
+}
+
+/* Disabled Button */
+.device .tab-content .action-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}

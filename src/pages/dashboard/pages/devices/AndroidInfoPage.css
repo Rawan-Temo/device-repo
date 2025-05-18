@@ -1,0 +1,72 @@
+.container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: auto;
+  border-radius: 10px;
+  text-align: center;
+  color: var(--font-color);
+}
+
+.title {
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  text-align: left;
+}
+
+.listItem {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.loading {
+  font-style: italic;
+  color: #555;
+  margin-top: 20px;
+}
+.buttonContainer {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.button {
+  margin: 20px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.hide {
+  background-color: #8d5b13;
+  color: white;
+}
+
+.unhide {
+  background-color: #13aba4;
+  color: white;
+}
+
+.change {
+  background-color: #0d446f;
+  color: white;
+}
+
+.button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.buttonRow {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-around;
+  gap: 5px;
+}
