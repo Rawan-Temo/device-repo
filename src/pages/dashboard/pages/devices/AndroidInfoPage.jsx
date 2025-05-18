@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useContext } from "react";
-import { useDevice } from "./DeviceContext";
 import "./AndroidInfoPage.css";
 
 import ChangeConnectionDialog from "./androidInfo/ChangeConnectionDialog";
@@ -16,7 +15,6 @@ const AndroidInfoPage = () => {
   const [deviceInfo, setDeviceInfo] = useState(null);
   const deviceId = useParams().id;
 
-  const { deviceStatusOnline } = useDevice();
 
   // const fetchDeviceInfo = useCallback(async () => {
   //   if (!deviceId) return;

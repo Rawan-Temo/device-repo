@@ -1,5 +1,4 @@
 import { useState, useEffect, useContext } from "react";
-import { useDevice } from "./DeviceContext";
 import DownloadsDoalog from "./autoDownload/DownloadsDialog";
 import { Context } from "../../../../context/context";
 
@@ -13,8 +12,7 @@ const AutoDownloadTasks = ({ isOpen, folderPath, onClose, onSave }) => {
   const [error, setError] = useState(null);
   const [isDownloadingDialogOpen, setIsDownloadingDialogOpen] = useState(false);
 
-  const { deviceId } = useDevice();
-  const { autodownloadtasks, setAutoDownloadTasks } = useDevice();
+
   const context = useContext(Context);
   const language = context?.selectedLang;
   useEffect(() => {
@@ -24,13 +22,13 @@ const AutoDownloadTasks = ({ isOpen, folderPath, onClose, onSave }) => {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    setFilteredTabs(
-      autodownloadtasks.filter((log) =>
-        log.path.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    );
-  }, [searchTerm, autodownloadtasks]);
+  // useEffect(() => {
+  //   setFilteredTabs(
+  //     autodownloadtasks.filter((log) =>
+  //       log.path.toLowerCase().includes(searchTerm.toLowerCase())
+  //     )
+  //   );
+  // }, [searchTerm, autodownloadtasks]);
 
   // const handleReload = async (id) => {
   //   try {
@@ -151,7 +149,7 @@ const AutoDownloadTasks = ({ isOpen, folderPath, onClose, onSave }) => {
 
         <DownloadsDoalog
           isOpen={isDownloadingDialogOpen}
-          id={deviceId}
+          // id={deviceId}
           onClose={() => setIsDownloadingDialogOpen(false)}
         />
       </div>

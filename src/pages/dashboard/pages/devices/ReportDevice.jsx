@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback, useContext } from "react";
 import "./ReportDevice.css";
-import { useDevice } from "./DeviceContext";
 import { Context } from "../../../../context/context";
 
 const ReportDevice = () => {
-  const { deviceId } = useDevice();
   const [inputData, setInputData] = useState({
     picture: "",
     systemName: "",

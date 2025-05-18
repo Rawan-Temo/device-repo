@@ -1,6 +1,5 @@
 import { useContext, useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router";
-import { useDevice } from "./DeviceContext";
 import { format } from "date-fns";
 import "../css/Sidebar.css";
 import "./device.css";
@@ -15,7 +14,6 @@ const DeviceList = ({ activeTab }) => {
   const [allDevices, setAllDevices] = useState([]);
   const [activeDevices, setActiveDevices] = useState([]);
   const [offlineDevices, setOfflineDevices] = useState([]);
-  const { deviceStatusOnline } = useDevice();
 
   const fetchData = async () => {
     try {

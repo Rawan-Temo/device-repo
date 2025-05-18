@@ -121,7 +121,7 @@ function Header() {
         {/* Sidebar References */}
         <div ref={sidebarRef} className=".sidebar"></div>
         <div ref={miniSidebarRef} className="mini-sidebar-device-d"></div>{" "}
-        {true ? (
+        {context ? (
           <a>
             <i className="fa-solid fa-link"></i> <span> Connected</span>
           </a>

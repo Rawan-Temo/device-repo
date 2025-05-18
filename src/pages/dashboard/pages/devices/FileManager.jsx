@@ -5,12 +5,10 @@ import AutoDownloadTasks from "./AutoDownloadTasks";
 
 import AddAutoDownload from "./fileManager/AddAutoDownload";
 import DownloadsDialog from "./autoDownload/DownloadsDialog";
-import { useDevice } from "./DeviceContext";
 import { Context } from "../../../../context/context";
 import { useLocation, useParams } from "react-router";
 
 const FileManager = () => {
-  const { fileList, setFiles, deviceStatusOnline } = useDevice();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { id: deviceId } = useParams();
@@ -206,7 +204,7 @@ const FileManager = () => {
         <FileManager2
           primaryColor="#007bff"
           enableFilePreview={false}
-          files={fileList}
+          // files={fileList}
           // onFileOpen={(s) => {
           //   handleOpen(s);
           // }}
