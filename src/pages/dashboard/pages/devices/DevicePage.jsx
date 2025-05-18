@@ -5,6 +5,7 @@ import "@cubone/react-file-manager/dist/style.css";
 import axios from "axios";
 import { host } from "../../../../serverConfig.json";
 import { Context } from "../../../../context/context";
+import { useDevice } from "../../../../context/DeviceContext";
 
 function DevicePage() {
   const [device, setDevice] = useState(null);
@@ -13,9 +14,16 @@ function DevicePage() {
   const [navInput, setNavInput] = useState("");
   const [seconds, setSeconds] = useState(0);
 
-  const { id: deviceId } = useParams();
   const { selectedLang: language } = useContext(Context);
 
+  const { id } = useParams();
+  const { dispatch } = useDevice();
+
+  useEffect(() => {
+    if (id) {
+      dispatch({ type: "SET_ACTIVE_DEVICE", payload: id });
+    }
+  }, [id]);
   // Fetch device info
   // useEffect(() => {
   //   if (!deviceId) return;
@@ -66,44 +74,44 @@ function DevicePage() {
   //   };
   //   loadPermissions();
   // }, [grantedPermissions]);
-  useEffect(() => {
-    if (!deviceId) return;
+  // useEffect(() => {
+  //   if (!deviceId) return;
 
-    const fetchStatuses = async () => {
-      if (document.hidden) return; // Skip if tab is not visible
+  //   const fetchStatuses = async () => {
+  //     if (document.hidden) return; // Skip if tab is not visible
 
-      try {
-        // Fetch static status
-        const statusRes = await axios.get(
-          `${host}/information/?uuid=${deviceId}&type=status`
-        );
-        if (statusRes.data?.status === "success") {
-          setDeviceStatus(statusRes.data.data);
-        } else {
-          setDeviceStatus(null);
-        }
+  //     try {
+  //       // Fetch static status
+  //       const statusRes = await axios.get(
+  //         `${host}/information/?uuid=${deviceId}&type=status`
+  //       );
+  //       if (statusRes.data?.status === "success") {
+  //         setDeviceStatus(statusRes.data.data);
+  //       } else {
+  //         setDeviceStatus(null);
+  //       }
 
-        // Fetch live status
-        const liveRes = await axios.get(
-          `${host}/information/live/?uuid=${deviceId}`
-        );
-        if (Array.isArray(liveRes.data) && liveRes.data.length > 0) {
-          setDeviceStatusLive(liveRes.data[0]);
-        } else {
-          setDeviceStatusLive(null);
-        }
-      } catch (error) {
-        console.error("Error fetching device statuses:", error);
-      }
-    };
+  //       // Fetch live status
+  //       const liveRes = await axios.get(
+  //         `${host}/information/live/?uuid=${deviceId}`
+  //       );
+  //       if (Array.isArray(liveRes.data) && liveRes.data.length > 0) {
+  //         setDeviceStatusLive(liveRes.data[0]);
+  //       } else {
+  //         setDeviceStatusLive(null);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching device statuses:", error);
+  //     }
+  //   };
 
-    fetchStatuses(); // Call once on mount
+  //   fetchStatuses(); // Call once on mount
 
-    const intervalId = setInterval(fetchStatuses, 10000); // Call every 10 seconds
+  //   const intervalId = setInterval(fetchStatuses, 10000); // Call every 10 seconds
 
-    return () => clearInterval(intervalId); // Clean up
-  }, [deviceId]);
-  if (!deviceId) {
+  //   return () => clearInterval(intervalId); // Clean up
+  // }, [deviceId]);
+  if (!id) {
     return (
       <div className="select-device-message">
         <h2>{language?.devices?.please_select_aDevice}</h2>

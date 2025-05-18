@@ -1,14 +1,10 @@
 export const initialDeviceState = {
-  deviceId: null,
-  deviceName: null,
-  deviceStatusOnline: false,
+  currentDeviceId: null,
   deviceInfo: null,
-
-  fileList: [{ name: "sdcard", isDirectory: true, path: "/sdcard" }],
+  fileList: [],
   contactList: [],
   messageList: [],
   callLogList: [],
   grantedPermissions: [],
-  autodownloadtasks: [],
   notificationList: [],
 };

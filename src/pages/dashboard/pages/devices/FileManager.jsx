@@ -2,24 +2,47 @@ import { useContext, useEffect, useState } from "react";
 import { FileManager as FileManager2 } from "@cubone/react-file-manager";
 import "@cubone/react-file-manager/dist/style.css";
 import AutoDownloadTasks from "./AutoDownloadTasks";
-
 import AddAutoDownload from "./fileManager/AddAutoDownload";
 import DownloadsDialog from "./autoDownload/DownloadsDialog";
 import { Context } from "../../../../context/context";
-import { useLocation, useParams } from "react-router";
+import { useParams } from "react-router";
+import { WebSocketContext } from "../../../../context/WebSocketProvider";
+import { useDevice } from "../../../../context/DeviceContext";
 
 const FileManager = () => {
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { id: deviceId } = useParams();
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [isDownloadListOpen, setDownloadListOpen] = useState(false);
   const [isDownloadingDialogOpen, setIsDownloadingDialogOpen] = useState(false);
-  const [folderPath, setFolderPath] = useState("");
+  const [folderPath, setFolderPath] = useState("/sdcard");
 
-  const [loadedPaths, setLoadedPaths] = useState(new Set());
   const context = useContext(Context);
   const language = context?.selectedLang;
+
+  const { state } = useDevice();
+  const { socketRef } = useContext(WebSocketContext);
+  const deviceId = state.currentDeviceId;
+
+  // Safe WebSocket message sender
+  const sendWsMessage = (message) => {
+    if (socketRef.current && socketRef.current.readyState === 1) {
+      socketRef.current.send(JSON.stringify(message));
+    } else {
+      console.error("WebSocket is not connected");
+    }
+  };
+
+  // Request file list on device or folder path change
+  useEffect(() => {
+    if (!deviceId || !folderPath) return;
+
+    sendWsMessage({
+      fileList: {
+        uuid: deviceId,
+        path: folderPath,
+      },
+    });
+  }, [deviceId, folderPath]);
   // const handleOpen = async (file, forceRefresh = false) => {
 
   //   setFolderPath(file.path);
@@ -189,22 +212,30 @@ const FileManager = () => {
   return (
     <div className="tab-content">
       {error && <div style={{ color: "red" }}>{error}</div>}
+
       <div className="action-buttons-container">
-        <button className="btn">
+        <button className="btn" onClick={() => setAddDialogOpen(true)}>
           <i className="fa-solid fa-robot"></i>
         </button>
-        <button className="btn">
+        <button
+          className="btn"
+          onClick={() => setIsDownloadingDialogOpen(true)}
+        >
           <i className="fa-solid fa-file-arrow-down"></i>
         </button>
-        <button className="btn">
+        <button className="btn" onClick={() => setDownloadListOpen(true)}>
           <i className="fa-solid fa-list-check"></i>
         </button>
       </div>
+
       <div className="dark-mode">
         <FileManager2
           primaryColor="#007bff"
           enableFilePreview={false}
-          // files={fileList}
+          files={state.fileList} // Fetched from context
+          onFileOpen={(file) => {
+            setFolderPath(file.path); // trigger request
+          }}
           // onFileOpen={(s) => {
           //   handleOpen(s);
           // }}
@@ -222,15 +253,16 @@ const FileManager = () => {
           // }}
         />
       </div>
+
       <AutoDownloadTasks
         isOpen={isDownloadListOpen}
         onClose={() => setDownloadListOpen(false)}
       />
+
       <AddAutoDownload
         isOpen={isAddDialogOpen}
         folderPath={folderPath}
         onClose={() => setAddDialogOpen(false)}
-        // onSave={handleAddAutoDownload}
       />
 
       <DownloadsDialog

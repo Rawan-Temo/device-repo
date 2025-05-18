@@ -1,5 +1,12 @@
+import { initialDeviceState } from "./initialDeviceState";
+
 export function deviceReducer(state, action) {
   switch (action.type) {
+    case "SET_ACTIVE_DEVICE":
+      return {
+        ...initialDeviceState,
+        currentDeviceId: action.payload,
+      };
     case "SET_DEVICE_INFO":
       return {
         ...state,

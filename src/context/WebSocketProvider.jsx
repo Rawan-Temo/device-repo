@@ -73,7 +73,7 @@ export const WebSocketProvider = ({ children }) => {
   };
 
   return (
-    <WebSocketContext.Provider value={{ socket: socketRef.current }}>
+    <WebSocketContext.Provider value={{ socketRef }}>
       {children}
     </WebSocketContext.Provider>
   );

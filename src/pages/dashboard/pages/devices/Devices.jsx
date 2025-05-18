@@ -4,8 +4,8 @@ import { format } from "date-fns";
 import "../css/Sidebar.css";
 import "./device.css";
 import { Context } from "../../../../context/context";
-import axios from "axios";
-import { host } from "../../../../serverConfig.json";
+import { useDevice } from "../../../../context/DeviceContext";
+import { WebSocketContext } from "../../../../context/WebSocketProvider";
 
 const DeviceList = ({ activeTab }) => {
   const context = useContext(Context);
@@ -14,32 +14,55 @@ const DeviceList = ({ activeTab }) => {
   const [allDevices, setAllDevices] = useState([]);
   const [activeDevices, setActiveDevices] = useState([]);
   const [offlineDevices, setOfflineDevices] = useState([]);
+  const { state } = useDevice();
+  const { socketRef } = useContext(WebSocketContext);
+  useEffect(() => {
+    if (
+      !state.currentDeviceId ||
+      !socketRef.current ||
+      socketRef.current.readyState !== 1
+    )
+      return;
 
-  const fetchData = async () => {
-    try {
-      const response = await axios.get(`${host}/devices`);
-      const devices = response.data;
-      setAllDevices(devices);
-      setActiveDevices(devices.filter((device) => device.is_connected));
-      setOfflineDevices(devices.filter((device) => !device.is_connected));
-      setLoading(false);
-    } catch (error) {
-      console.error("Error while fetching devices:", error);
-      setLoading(false);
+    socketRef.current.send(
+      JSON.stringify({ selectedDevice: { uuid: state.currentDeviceId } })
+    );
+  }, [state.currentDeviceId, socketRef.current]);
+  console.log(state);
+
+  const sendWsMessage = (message) => {
+    if (socketRef.current && socketRef.current.readyState === 1) {
+      socketRef.current.send(JSON.stringify(message));
+    } else {
+      console.error("WebSocket is not connected");
     }
   };
 
-  useEffect(() => {
-    fetchData(); // initial fetch
+  // const fetchData = async () => {
+  //   try {
+  //     const response = await axios.get(`${host}/devices`);
+  //     const devices = response.data;
+  //     setAllDevices(devices);
+  //     setActiveDevices(devices.filter((device) => device.is_connected));
+  //     setOfflineDevices(devices.filter((device) => !device.is_connected));
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error("Error while fetching devices:", error);
+  //     setLoading(false);
+  //   }
+  // };
 
-    const interval = setInterval(() => {
-      if (!document.hidden) {
-        fetchData(); // refresh every 10 seconds only if tab is active
-      }
-    }, 10000);
+  // useEffect(() => {
+  //   fetchData(); // initial fetch
 
-    return () => clearInterval(interval); // cleanup on unmount
-  }, []);
+  //   const interval = setInterval(() => {
+  //     if (!document.hidden) {
+  //       fetchData(); // refresh every 10 seconds only if tab is active
+  //     }
+  //   }, 10000);
+
+  //   return () => clearInterval(interval); // cleanup on unmount
+  // }, []);
 
   const devicesToShow = activeTab === "online" ? activeDevices : offlineDevices;
 

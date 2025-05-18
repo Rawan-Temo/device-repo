@@ -1,7 +1,6 @@
 import { createContext, useReducer, useContext } from "react";
 import { initialDeviceState } from "./initialDeviceState";
 import { deviceReducer } from "./deviceReducer";
-
 const DeviceContext = createContext();
 
 export const DeviceProvider = ({ children }) => {
