@@ -5,8 +5,8 @@ export const Context = createContext({});
 
 const userLanguage = navigator.language || navigator.userLanguage;
 const userLang = userLanguage.startsWith("ar") ? "AR" : "EN";
-
 const Provider = ({ children }) => {
+  const [userInfo, setUserInfo] = useState({});
   const [mode, setMode] = useState(+localStorage.getItem("isDark") || false);
   const [language, setLanguage] = useState(
     localStorage.getItem("language") || userLang || "EN"
@@ -45,6 +45,22 @@ const Provider = ({ children }) => {
     getLang();
   }, [language]);
 
+  const refreshToken = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      setUserInfo(token);
+    } catch (error) {
+      console.error("Error refreshing token:", error);
+    }
+  };
+  useEffect(() => {
+    if (!userInfo.access) {
+      refreshToken();
+    } 
+  }, [userInfo.access]);
+
   return (
     <Context.Provider
       value={{
@@ -53,6 +69,8 @@ const Provider = ({ children }) => {
         language,
         setLanguage,
         selectedLang,
+        userInfo,
+        setUserInfo,
       }}
     >
       {children}

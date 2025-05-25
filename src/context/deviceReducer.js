@@ -37,6 +37,9 @@ export function deviceReducer(state, action) {
     case "SET_NOTIFICATIONS":
       return { ...state, notificationList: action.payload };
 
+    case "SET_MY_DEVICES":
+      return { ...state, myDevices: action.payload };
+
     default:
       return state;
   }

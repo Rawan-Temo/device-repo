@@ -7,6 +7,8 @@ import { Route, Routes, useLocation } from "react-router";
 import Dashboard from "./pages/dashboard/Dashboard";
 import Login from "./pages/Login";
 import ProtectedRoute from "./ProtectedRouter";
+import { WebSocketProvider } from "./context/WebSocketProvider";
+import { AppProvider } from "./context/context";
 
 function App() {
   const location = useLocation();
@@ -16,9 +18,11 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
 
-        {/* <Route element={<ProtectedRoute />}> */}
-        <Route path="/*" element={<Dashboard />} />
-        {/* </Route> */}
+        <Route element={<ProtectedRoute />}>
+     
+              <Route path="/*" element={<Dashboard />} />
+        
+        </Route>
       </Routes>
       {}
     </div>

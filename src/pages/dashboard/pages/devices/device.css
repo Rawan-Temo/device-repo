@@ -514,6 +514,7 @@ body.arabic .device-header .device-info .info h4 {
   display: flex;
   gap: 8px; /* Adds space between buttons */
   margin-bottom: 5px;
+  justify-content: center;
 }
 .width-800 {
   width: 800px !important;

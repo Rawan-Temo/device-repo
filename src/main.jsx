@@ -10,12 +10,12 @@ import { WebSocketProvider } from "./context/WebSocketProvider.jsx";
 import { DeviceProvider } from "./context/DeviceContext.jsx";
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
+        <AppProvider>
     <DeviceProvider>
       <WebSocketProvider>
-        <AppProvider>
           <App />
-        </AppProvider>
       </WebSocketProvider>
     </DeviceProvider>
+        </AppProvider>
   </BrowserRouter>
 );

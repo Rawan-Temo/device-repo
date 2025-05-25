@@ -64,6 +64,12 @@ function Header() {
       }
     }
   });
+  const handleLogout = () => {
+    // Clear user info and token
+    if (context?.setUserInfo) context.setUserInfo({});
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
   return (
     <div className="header">
       <div className="toggle flex ">
@@ -104,7 +110,7 @@ function Header() {
           </div>
         </article>
         <ToggleMode />
-        <button className="logout-button" /*onClick={handleLogout}*/>
+        <button className="logout-button" onClick={handleLogout}>
           <i className="fa-solid fa-right-from-bracket"></i>
         </button>
       </div>

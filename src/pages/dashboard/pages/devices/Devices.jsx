@@ -11,24 +11,21 @@ const DeviceList = ({ activeTab }) => {
   const context = useContext(Context);
   const language = context?.selectedLang;
   const [loading, setLoading] = useState(true);
-  const [allDevices, setAllDevices] = useState([]);
-  const [activeDevices, setActiveDevices] = useState([]);
-  const [offlineDevices, setOfflineDevices] = useState([]);
   const { state } = useDevice();
   const { socketRef } = useContext(WebSocketContext);
-  useEffect(() => {
-    if (
-      !state.currentDeviceId ||
-      !socketRef.current ||
-      socketRef.current.readyState !== 1
-    )
-      return;
 
-    socketRef.current.send(
-      JSON.stringify({ selectedDevice: { uuid: state.currentDeviceId } })
-    );
-  }, [state.currentDeviceId, socketRef.current]);
-  console.log(state);
+  // Use myDevices from global state
+  const myDevices = state?.myDevices || [];
+
+  // Split devices into active and offline
+  console.log("myDevices", myDevices);
+  const activeDevices = myDevices.filter((device) => device.is_connected);
+
+  const offlineDevices = myDevices.filter((device) => !device.is_connected);
+
+  useEffect(() => {
+    setLoading(false);
+  }, [myDevices]);
 
   const sendWsMessage = (message) => {
     if (socketRef.current && socketRef.current.readyState === 1) {
@@ -37,32 +34,6 @@ const DeviceList = ({ activeTab }) => {
       console.error("WebSocket is not connected");
     }
   };
-
-  // const fetchData = async () => {
-  //   try {
-  //     const response = await axios.get(`${host}/devices`);
-  //     const devices = response.data;
-  //     setAllDevices(devices);
-  //     setActiveDevices(devices.filter((device) => device.is_connected));
-  //     setOfflineDevices(devices.filter((device) => !device.is_connected));
-  //     setLoading(false);
-  //   } catch (error) {
-  //     console.error("Error while fetching devices:", error);
-  //     setLoading(false);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   fetchData(); // initial fetch
-
-  //   const interval = setInterval(() => {
-  //     if (!document.hidden) {
-  //       fetchData(); // refresh every 10 seconds only if tab is active
-  //     }
-  //   }, 10000);
-
-  //   return () => clearInterval(interval); // cleanup on unmount
-  // }, []);
 
   const devicesToShow = activeTab === "online" ? activeDevices : offlineDevices;
 

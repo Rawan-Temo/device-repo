@@ -17,13 +17,13 @@ function DevicePage() {
   const { selectedLang: language } = useContext(Context);
 
   const { id } = useParams();
-  const { dispatch } = useDevice();
+  const { state, dispatch } = useDevice();
 
-  useEffect(() => {
-    if (id) {
-      dispatch({ type: "SET_ACTIVE_DEVICE", payload: id });
-    }
-  }, [id]);
+  // useEffect(() => {
+  //   if (id) {
+  //     dispatch({ type: "SET_ACTIVE_DEVICE", payload: id });
+  //   }
+  // }, [id]);
   // Fetch device info
   // useEffect(() => {
   //   if (!deviceId) return;
@@ -119,6 +119,11 @@ function DevicePage() {
     );
   }
 
+  // Find the current device from myDevices
+  const currentDevice = state.myDevices?.find((d) => d.uuid === id);
+  // Get permissions object (may be undefined if not found)
+  const grantedPermissions = currentDevice?.granted_permission || {};
+
   return (
     <div className="device">
       <div className="device-header flex">
@@ -130,7 +135,7 @@ function DevicePage() {
                 {language?.devices?.device} {device?.name || "N/A"}
               </h4>
               <p>
-                {language?.devices?.id} {deviceId}
+                {language?.devices?.id} {id}
               </p>
             </article>
           </Link>
@@ -148,7 +153,7 @@ function DevicePage() {
                   <i
                     key={permission}
                     className={`fa-solid ${icon} ${
-                      iconMap ? "active-icon" : ""
+                      grantedPermissions[permission] ? "active-icon" : ""
                     }`}
                     title={permission}
                   ></i>

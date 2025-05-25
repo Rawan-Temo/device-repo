@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import "./Manage.css";
 
 import { Context } from "../../../../context/context";
+import { deleteGroup, getAllGroups, getDevicesByGroup, removeUserFromGroup } from "../../../../apiService";
 
 function ManageGroups() {
   const [groups, setGroups] = useState([]);
@@ -11,18 +12,19 @@ function ManageGroups() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const context = useContext(Context);
   const language = context?.selectedLang;
-  // useEffect(() => {
-  //   fetchGroups();
-  // }, []);
+  useEffect(() => {
+    fetchGroups();
+  }, []);
 
-  // const fetchGroups = async () => {
-  //   try {
-  //     const response = await getAllGroups();
-  //     setGroups(response);
-  //   } catch (error) {
-  //     console.error("Error fetching groups:", error);
-  //   }
-  // };
+  const fetchGroups = async () => {
+    try {
+      const response = await getAllGroups();
+      console.log("Fetched groups:", response);
+      setGroups(response);
+    } catch (error) {
+      console.error("Error fetching groups:", error);
+    }
+  };
 
   // const handleSubmit = async (e) => {
   //   e.preventDefault();
@@ -49,41 +51,44 @@ function ManageGroups() {
   //   setGroupName(group.name);
   // };
 
-  // const handleDelete = async (groupId) => {
-  //   if (!window.confirm("Are you sure you want to delete this group?")) return;
-  //   try {
-  //     await deleteGroup(groupId);
-  //     fetchGroups();
-  //   } catch (error) {
-  //     console.error("Error deleting group:", error);
-  //   }
-  // };
+  const handleDelete = async (groupId) => {
+    if (!window.confirm("Are you sure you want to delete this group?")) return;
+    try {
+      await deleteGroup(groupId);
+      fetchGroups();
+    } catch (error) {
+      console.error("Error deleting group:", error);
+    }
+  };
 
-  // const toggleUserList = async (groupId) => {
-  //   if (selectedGroupUsers[groupId]) {
-  //     setSelectedGroupUsers((prev) => ({ ...prev, [groupId]: null }));
-  //   } else {
-  //     setLoadingUsers(true);
-  //     try {
-  //       const users = await getUsersByGroup(groupId);
-  //       setSelectedGroupUsers((prev) => ({ ...prev, [groupId]: users }));
-  //     } catch (error) {
-  //       console.error("Error fetching users:", error);
-  //     }
-  //     setLoadingUsers(false);
-  //   }
-  // };
+  const toggleUserList = async (groupId) => {
+    // If already open, close it and clear the user list
+    if (selectedGroupUsers[groupId]) {
+      setSelectedGroupUsers({});
+      return;
+    }
+    setLoadingUsers(true);
+    // Clear all user lists before fetching new one
+    setSelectedGroupUsers({});
+    try {
+      const users = await getDevicesByGroup(groupId);
+      setSelectedGroupUsers({ [groupId]: users });
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+    setLoadingUsers(false);
+  };
 
-  // const handleRemoveUser = async (userId, groupId) => {
-  //   if (!window.confirm("Are you sure you want to remove this user?")) return;
-  //   try {
-  //     await removeUserFromGroup(groupId, userId);
-  //     toggleUserList(groupId);
-  //     fetchGroups();
-  //   } catch (error) {
-  //     console.error("Error removing user:", error);
-  //   }
-  // };
+  const handleRemoveUser = async (userId, groupId) => {
+    if (!window.confirm("Are you sure you want to remove this user?")) return;
+    try {
+      await removeUserFromGroup(groupId, userId);
+      toggleUserList(groupId);
+      fetchGroups();
+    } catch (error) {
+      console.error("Error removing user:", error);
+    }
+  };
 
   return (
     <div className="tabel-container">
@@ -119,7 +124,6 @@ function ManageGroups() {
             <tr>
               <th> {language?.users?.id}</th>
               <th> {language?.users?.group_name}</th>
-              <th>{language?.users?.Users}</th>
               <th>{language?.users?.Operations}</th>
             </tr>
           </thead>
@@ -130,7 +134,6 @@ function ManageGroups() {
                   <tr>
                     <td>{group.id}</td>
                     <td>{group.name}</td>
-                    <td>{group.userCount}</td>
                     <td>
                       <div className="action-buttons-container">
                         <button
@@ -140,19 +143,19 @@ function ManageGroups() {
                           {language?.users?.Edit}
                         </button>
                         <button
-                          // onClick={() => handleDelete(group.id)}
+                          onClick={() => handleDelete(group.id)}
                           className="delete-button"
                         >
                           {language?.users?.delete}
                         </button>
                         <button
-                          // onClick={() => toggleUserList(group.id)}
+                          onClick={() => toggleUserList(group.id)}
                           disabled={group.userCount === 0}
                           className="view-users-button btn"
                         >
                           {selectedGroupUsers[group.id]
-                            ? language?.users?.hide_users
-                            : language?.users?.view_users}
+                            ? "hide devices"
+                            : "view devices"}
                         </button>
                       </div>
                     </td>
@@ -171,9 +174,9 @@ function ManageGroups() {
                                 <li key={user.id}>
                                   {user.name} ({user.email})
                                   <button
-                                    // onClick={() =>
-                                    //   handleRemoveUser(user.id, group.id)
-                                    // }
+                                    onClick={() =>
+                                      handleRemoveUser(user.id, group.id)
+                                    }
                                     className="delete-button"
                                   >
                                     {language?.devices?.delete}

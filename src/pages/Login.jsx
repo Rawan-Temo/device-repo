@@ -1,22 +1,31 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router";
 import ParticalBackground from "../components/particles/ParticalBackground";
-
+import { login } from "../apiService"; // Import the login function from your API module
+import { Context } from "../context/context";
 function Login() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate(); // Redirect user after login
-
+  const { setUserInfo, userInfo } = useContext(Context); // Import the context if needed
   const handleLogin = async (e) => {
-    // e.preventDefault();
-    // setError(""); // Clear previous errors
-    // try {
-    //   await login(email, password); // Call login function
-    //   navigate("/"); // Redirect after successful login
-    // } catch (err) {
-    //   setError(err); // Show error message
-    // }
+    e.preventDefault();
+    setError(""); // Clear previous errors
+    try {
+      const response = await login(username, password); // Call login function
+      console.log("Login response:", response); // Debugging log
+      console.log("Login response:", response.access); // Debugging log
+
+      if (response.access) {
+        localStorage.setItem("token", response.access); // Store JWT
+        setUserInfo(response.access); // Save user info (optional)
+      }
+      console.log("User info after login:", userInfo); // Debugging log
+      navigate("/"); // Redirect after successful login
+    } catch (err) {
+      setError(err); // Show error message
+    }
   };
 
   return (
@@ -30,14 +39,14 @@ function Login() {
             <i className="fa-solid fa-user"></i>
           </div>
         </div>
-        {error && <p className="error-message">{error}</p>}
+        {/* {error && <p className="error-message">{error}</p>} */}
         <form onSubmit={handleLogin} className="login-form">
           <div className="form-group">
-            <label>Email</label>
+            <label>username</label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>

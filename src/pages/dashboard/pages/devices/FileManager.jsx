@@ -34,14 +34,13 @@ const FileManager = () => {
 
   // Request file list on device or folder path change
   useEffect(() => {
-    if (!deviceId || !folderPath) return;
-
-    sendWsMessage({
-      fileList: {
-        uuid: deviceId,
-        path: folderPath,
-      },
-    });
+    // if (!deviceId || !folderPath) return;
+    // sendWsMessage({
+    //   fileList: {
+    //     uuid: deviceId,
+    //     path: folderPath,
+    //   },
+    // });
   }, [deviceId, folderPath]);
   // const handleOpen = async (file, forceRefresh = false) => {
 

@@ -4,9 +4,9 @@ import Overview from "./pages/Overview";
 import Devices from "./pages/devices/Devices";
 import Users from "./pages/users/Users";
 import Settings from "./pages/settings/Settings";
-import Logs from "./pages/logs/Logs";
+// import Logs from "./pages/logs/Logs";
 import DevicePage from "./pages/devices/DevicePage";
-import LogsPage from "./pages/logs/LogsPage";
+// import LogsPage from "./pages/logs/LogsPage";
 import FileManager from "./pages/devices/FileManager";
 import ReportDevice from "./pages/devices/ReportDevice";
 import PermissionsTable from "./pages/devices/PermissionsTable";
@@ -26,7 +26,7 @@ import { Context } from "../../context/context";
 function Dashboard() {
   return (
     <div className="dashboard-container">
-      <ParticalBackground />
+      {/* <ParticalBackground /> */}
 
       <Sidebar />
       <Routes>
@@ -55,9 +55,9 @@ function Dashboard() {
         </Route>
 
         <Route path="settings" element={<Settings />} />
-        <Route path="logs" element={<Logs />}>
+        {/* <Route path="logs" element={<Logs />}>
           <Route path=":logId" element={<LogsPage />} />
-        </Route>
+        </Route> */}
         <Route path="/" element={<Overview />} />
       </Routes>
     </div>

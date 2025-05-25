@@ -1,30 +1,25 @@
-// import axios from "axios";
+import axios from "axios";
 // import axiosInstance from "./axiosInstance";
-// import { host } from "./serverConfig.json";
+import { host, http } from "./serverConfig.json";
 
 import { useContext } from "react";
 import { WebSocketContext } from "./context/WebSocketProvider";
-
+import { Context } from "./context/context";
 // const API_BASE_URL = `${host}/api`;
 
-// export const login = async (email, password) => {
-//   try {
-//     const response = await axios.post(`${API_BASE_URL}/Auth/login`, {
-//       email,
-//       password,
-//     });
+export const login = async (username, password) => {
+  try {
+    const response = await axios.post(`${http}/api/token/`, {
+      username,
+      password,
+    });
 
-//     if (response.data.token) {
-//       localStorage.setItem("token", response.data.token); // Store JWT
-//       saveUserInfo(response.data.token); // Save user info (optional)
-//     }
-
-//     return response.data;
-//   } catch (error) {
-//     console.error("Login error:", error.response?.data || error.message);
-//     throw error.response?.data?.message || "Invalid credentials";
-//   }
-// };
+    return response.data;
+  } catch (error) {
+    console.error("Login error:", error.response?.data || error.message);
+    throw error.response?.data?.message || "Invalid credentials";
+  }
+};
 
 // // 🔹 Save user info (Optional: Extract username)
 // const saveUserInfo = (token) => {
@@ -79,46 +74,58 @@ import { WebSocketContext } from "./context/WebSocketProvider";
 //   }
 // };
 
-// export const getAllUsers = async () => {
-//   try {
-//     const response = await axiosInstance.get(`/groups/users`);
-//     return response.data;
-//   } catch (error) {
-//     console.error(
-//       "Error getting users:",
-//       error.response?.data || error.message
-//     );
-//     throw error;
-//   }
-// };
+export const getAllUsers = async () => {
+  try {
+    const response = await axios.get(`${http}/api/users/`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error getting users:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
 
-// export const getUsersByGroup = async (groupId) => {
-//   try {
-//     const response = await axiosInstance.get(
-//       `/groups/usersbygroup?groupId=${groupId}`
-//     );
-//     return response.data;
-//   } catch (error) {
-//     console.error(
-//       "Error getting users by group:"
-//       // error.response?.data || error.message
-//     );
-//     throw error;
-//   }
-// };
+export const getDevicesByGroup = async (groupId) => {
+  try {
+    console.log("Fetching users for group:", groupId);
+    const response = await axios.get(`${http}/api/devices/?id=${groupId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    console.log(response);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error getting users by group:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
 
-// export const getAllGroups = async () => {
-//   try {
-//     const response = await axiosInstance.get(`/groups/groups`);
-//     return response.data;
-//   } catch (error) {
-//     console.error(
-//       "Error getting users:",
-//       error.response?.data || error.message
-//     );
-//     throw error;
-//   }
-// };
+export const getAllGroups = async () => {
+  try {
+    const response = await axios.get(`${http}/api/groups/`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error getting users:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
 
 // export const createGroup = async (groupName) => {
 //   try {
@@ -150,19 +157,52 @@ import { WebSocketContext } from "./context/WebSocketProvider";
 //   }
 // };
 
-// export const deleteGroup = async (groupId) => {
-//   try {
-//     const response = await axiosInstance.delete(`/groups/${groupId}`);
-//     return response.data;
-//   } catch (error) {
-//     console.error(
-//       "Error deleting group:",
-//       error.response?.data || error.message
-//     );
-//     throw error;
-//   }
-// };
+export const deleteGroup = async (groupId) => {
+  try {
+    const response = await axios.delete(`/groups/${groupId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error deleting group:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+export const deleteUser = async (userId) => {
+  try {
+    const response = await axios.delete(`/groups/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error deleting group:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
 
+export const addUser = async (userData) => {
+  try {
+    const response = await axios.post(`${http}/api/users/`, userData, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error adding user:", error.response?.data || error.message);
+    throw error;
+  }
+};
 // export const addUserToGroup = async (groupId, userId) => {
 //   try {
 //     const response = await axiosInstance.post(
@@ -178,20 +218,25 @@ import { WebSocketContext } from "./context/WebSocketProvider";
 //   }
 // };
 
-// export const removeUserFromGroup = async (groupId, userId) => {
-//   try {
-//     const response = await axiosInstance.delete(
-//       `/groups/${groupId}/remove-user/${userId}`
-//     );
-//     return response.data;
-//   } catch (error) {
-//     console.error(
-//       "Error removing user from group:",
-//       error.response?.data || error.message
-//     );
-//     throw error;
-//   }
-// };
+export const removeUserFromGroup = async (groupId, userId) => {
+  try {
+    const response = await axios.delete(
+      `/groups/${groupId}/remove-user/${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error removing user from group:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
 
 // export const linkDevicetoUser = async (deviceId, userId) => {
 //   try {
@@ -208,35 +253,37 @@ import { WebSocketContext } from "./context/WebSocketProvider";
 //   }
 // };
 
-// export const unLinkDevicetoUser = async (deviceId, userId) => {
-//   try {
-//     const response = await axiosInstance.post(
-//       `/devices/${deviceId}/unlink-user/${userId}`
-//     );
-//     return response.data;
-//   } catch (error) {
-//     console.error(
-//       "Error Unlinking device to user:",
-//       error.response?.data || error.message
-//     );
-//     throw error;
-//   }
-// };
+export const unLinkDevicetoUser = async (deviceId, userId) => {
+  try {
+    const response = await axios.post(
+      `/devices/${deviceId}/unlink-user/${userId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error Unlinking device to user:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
 
-// export const getUserDevices = async (userId) => {
-//   try {
-//     const response = await axiosInstance.get(
-//       `/devices/userdevices?Id=${userId}`
-//     );
-//     return response.data;
-//   } catch (error) {
-//     console.error(
-//       "Error getting user devices:",
-//       error.response?.data || error.message
-//     );
-//     throw error;
-//   }
-// };
+export const getUserDevices = async (userId) => {
+  try {
+    const response = await axios.get(`${http}/api/devices/?id=${userId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error getting user devices:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
 
 // export const getDevices = async () => {
 //   try {

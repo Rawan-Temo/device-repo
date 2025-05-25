@@ -2,30 +2,42 @@ import { useContext, useState } from "react";
 import { useNavigate } from "react-router";
 import "./user.css";
 import { Context } from "../../../../context/context";
+import { addUser } from "../../../../apiService";
+import Loading from "../../../../components/loader/Loading";
 
 const AddUser = () => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState({
-    name: "",
-    email: "",
+    username: "",
     password: "",
     conf_password: "",
-    group: "",
+    is_superadmin: false,
     role: "",
-    permissions: [],
-    devices: [],
   });
   const context = useContext(Context);
   const language = context?.selectedLang;
   const [passwordError, setPasswordError] = useState("");
+  const [confPasswordError, setConfPasswordError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-
     if (name === "password") {
       setPasswordError(validatePassword(value));
+      setUserData((prevState) => ({ ...prevState, [name]: value }));
+      // Also check confirm password if already entered
+      if (userData.conf_password) {
+        setConfPasswordError(
+          value !== userData.conf_password ? "Passwords do not match" : ""
+        );
+      }
+      return;
     }
-
+    if (name === "conf_password") {
+      setConfPasswordError(
+        value !== userData.password ? "Passwords do not match" : ""
+      );
+    }
     setUserData((prevState) => ({
       ...prevState,
       [name]: value,
@@ -38,15 +50,16 @@ const AddUser = () => {
     const lowercase = /[a-z]/;
     const number = /[0-9]/;
     const specialChar = /[!@#$%^&*]/;
-
     if (!minLength.test(password))
-      return language?.users?.password_must_B8chars;
-    if (!uppercase.test(password)) return language?.users?.password_must_1Upper;
-    if (!lowercase.test(password)) return language?.users?.password_must_1Lower;
-    if (!number.test(password)) return language?.users?.password_must_1Number;
+      return "Password must be at least 8 characters.";
+    if (!uppercase.test(password))
+      return "Password must contain at least one uppercase letter.";
+    if (!lowercase.test(password))
+      return "Password must contain at least one lowercase letter.";
+    if (!number.test(password))
+      return "Password must contain at least one number.";
     if (!specialChar.test(password))
-      return language?.users?.password_must_1Special;
-
+      return "Password must contain at least one special character.";
     return ""; // No errors
   };
 
@@ -55,30 +68,59 @@ const AddUser = () => {
     e.target.classList.toggle("active");
   };
   const handleDropdownSelect = (e, type) => {
-    const selectedValue = e.target.textContent.trim();
+    const selectedValue =
+      e.target.textContent.trim() === language?.users?.admin;
     setUserData((prevState) => ({
       ...prevState,
-      [type]: selectedValue,
+      is_superadmin: selectedValue,
+      role: e.target.textContent.trim(),
     }));
     const inpElement = e.target.closest(".selecte").querySelector(".inp");
     inpElement.classList.remove("active");
   };
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+    if (passwordError || confPasswordError) return;
+    if (!userData.username || !userData.password || !userData.conf_password) {
+      alert("Please fill all fields.");
+      return;
+    }
+    if (userData.password !== userData.conf_password) {
+      setConfPasswordError("Passwords do not match");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const submitData = { ...userData };
+      delete submitData.conf_password;
+      delete submitData.role;
+      await addUser(submitData);
+      alert("User added successfully.");
+      navigate("/users/manage-users");
+    } catch (error) {
+      console.error("Error adding user:", error);
+      alert("Error adding user.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="add-user-form">
-      <h2>{language?.users?.add_user}</h2>
+      {isLoading && <Loading />}
+      <h2>Add User</h2>
       <form>
         {/* User Information */}
         <div className="form-group-user two-divs">
           <div>
-            <label htmlFor="email">{language?.users?.email}</label>
+            <label htmlFor="username">Username</label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={userData.email}
+              type="text"
+              id="username"
+              name="username"
+              value={userData.username}
               onChange={handleInputChange}
-              placeholder={language?.users?.email_placeholder}
+              placeholder="Enter username"
               required
             />
           </div>
@@ -108,6 +150,9 @@ const AddUser = () => {
               placeholder={language?.users?.confirm_password_palceholder}
               required
             />
+            {confPasswordError && (
+              <p className="error-text">{confPasswordError}</p>
+            )}
           </div>
 
           <div className="selecte">
@@ -116,10 +161,10 @@ const AddUser = () => {
               {userData.role || language?.users?.select_role}
             </div>
             <article>
-              <h2 onClick={(e) => handleDropdownSelect(e, "role")}>
+              <h2 onClick={(e) => handleDropdownSelect(e, "is_superadmin")}>
                 {language?.users?.admin}
               </h2>
-              <h2 onClick={(e) => handleDropdownSelect(e, "role")}>
+              <h2 onClick={(e) => handleDropdownSelect(e, "is_superadmin")}>
                 {language?.users?.user}
               </h2>
             </article>
@@ -131,6 +176,7 @@ const AddUser = () => {
           type="submit"
           className="width-100 btn"
           disabled={passwordError !== ""}
+          onClick={handleAddUser}
         >
           {language?.users?.add_user}
         </button>

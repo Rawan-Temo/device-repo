@@ -43,9 +43,6 @@ button {
   transition: 0.3s;
 }
 
-
-
-
 .cancel-button {
   background-color: #6c757d;
   color: white;
@@ -59,11 +56,11 @@ button {
 ul {
   list-style-type: none;
   padding: 0;
-  margin-top: 20px;
+  margin-top: 5px;
 }
 
 li {
-  padding: 12px;
+  padding: 2px;
   border-radius: 6px;
   margin-bottom: 10px;
   display: flex;

@@ -1,31 +1,36 @@
-import { createContext, useEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useRef } from "react";
 import { useDevice } from "./DeviceContext";
 import { host } from "../serverConfig.json";
+import { Context } from "./context";
 
 export const WebSocketContext = createContext();
 
 export const WebSocketProvider = ({ children }) => {
   const socketRef = useRef(null);
   const { dispatch } = useDevice();
+  const { userInfo } = useContext(Context);
 
   useEffect(() => {
+    if (!userInfo) return; // Wait for token
+
     socketRef.current = new WebSocket(host);
 
     socketRef.current.onopen = () => {
       console.log("WebSocket connected");
-      // Send a JSON message with a random id
-      const message = JSON.stringify({
-        userDevConeection: {
-          uuid: crypto.randomUUID(),
-        },
-      });
-      socketRef.current.send(message);
+      // Send a JSON message with a random id and the token every 5 seconds
+      const sendPing = () => {
+        const message = JSON.stringify({
+          token: userInfo?.token || localStorage.getItem("token") || "",
+          get_my_online_devices: true,
+        });
+        socketRef.current.send(message);
+      };
+      sendPing(); // Send immediately on open
+      socketRef.current.pingInterval = setInterval(sendPing, 5000);
     };
 
-    console.log(1);
     socketRef.current.onmessage = (event) => {
       try {
-        console.log(2);
         const message = JSON.parse(event.data);
         console.log("WS message received", message);
         handleWSMessage(message);
@@ -35,14 +40,21 @@ export const WebSocketProvider = ({ children }) => {
     };
 
     return () => {
+      if (socketRef.current?.pingInterval) {
+        clearInterval(socketRef.current.pingInterval);
+      }
       socketRef.current?.close();
     };
-  }, []);
+    // Only reconnect if token changes
+  }, [userInfo]);
 
   const handleWSMessage = (message) => {
-    const { type, data } = message;
+    const { status, data } = message;
 
-    switch (type) {
+    switch (status) {
+      case "my_devices":
+        dispatch({ type: "SET_MY_DEVICES", payload: data });
+        break;
       case "device-info":
         dispatch({ type: "SET_DEVICE_INFO", payload: data });
         break;
@@ -68,7 +80,7 @@ export const WebSocketProvider = ({ children }) => {
         dispatch({ type: "SET_NOTIFICATIONS", payload: data });
         break;
       default:
-        console.warn("Unknown WS message type", type);
+        console.warn("Unknown WS message type", status);
     }
   };
 
