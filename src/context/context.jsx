@@ -45,21 +45,21 @@ const Provider = ({ children }) => {
     getLang();
   }, [language]);
 
-  const refreshToken = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+  // const refreshToken = async () => {
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     if (!token) return;
 
-      setUserInfo(token);
-    } catch (error) {
-      console.error("Error refreshing token:", error);
-    }
-  };
-  useEffect(() => {
-    if (!userInfo.access) {
-      refreshToken();
-    } 
-  }, [userInfo.access]);
+  //     setUserInfo(token);
+  //   } catch (error) {
+  //     console.error("Error refreshing token:", error);
+  //   }
+  // };
+  // useEffect(() => {
+  //   if (!userInfo.access) {
+  //     refreshToken();
+  //   } 
+  // }, [userInfo.access]);
 
   return (
     <Context.Provider

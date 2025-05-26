@@ -2,7 +2,15 @@ import React, { useState, useEffect, useContext } from "react";
 import "./Manage.css";
 
 import { Context } from "../../../../context/context";
-import { deleteGroup, getAllGroups, getDevicesByGroup, removeUserFromGroup } from "../../../../apiService";
+import {
+  getAllGroups,
+  createGroup,
+  deleteGroup,
+  getDevicesByGroup,
+  removeUserFromGroup,
+  AllUsersWithGroups,
+  updateGroup,
+} from "../../../../apiService";
 
 function ManageGroups() {
   const [groups, setGroups] = useState([]);
@@ -10,6 +18,12 @@ function ManageGroups() {
   const [editingGroup, setEditingGroup] = useState(null);
   const [selectedGroupUsers, setSelectedGroupUsers] = useState({});
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [allUsers, setAllUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState();
+  const [showEditGroup, setShowEditGroup] = useState(false);
+  const [editedGroupAdmin, setEditedGroupAdmin] = useState();
+  const [editAdmin, setEditAdmin] = useState();
   const context = useContext(Context);
   const language = context?.selectedLang;
   useEffect(() => {
@@ -26,30 +40,96 @@ function ManageGroups() {
     }
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   if (!groupName.trim()) {
-  //     alert("Group name is required!");
-  //     return;
-  //   }
-  //   try {
-  //     if (editingGroup) {
-  //       await updateGroup(editingGroup.id, groupName);
-  //     } else {
-  //       await createGroup(groupName);
-  //     }
-  //     setGroupName("");
-  //     setEditingGroup(null);
-  //     fetchGroups();
-  //   } catch (error) {
-  //     console.error("Error saving group:", error);
-  //   }
-  // };
+  const openCreateGroupPopup = async () => {
+    setShowCreateGroup(true);
+    try {
+      const users = await AllUsersWithGroups();
 
-  // const handleEdit = (group) => {
-  //   setEditingGroup(group);
-  //   setGroupName(group.name);
-  // };
+      console.log("Filtered users:", users);
+
+      setAllUsers(users);
+    } catch (error) {
+      setAllUsers([]);
+    }
+  };
+
+  const closeCreateGroupPopup = () => {
+    setShowCreateGroup(false);
+    setGroupName("");
+    setSelectedUser();
+  };
+
+  const handleUserSelect = (e) => {
+    const value = e.target.value;
+    setSelectedUser(value);
+  };
+
+  const handleCreateGroup = async (e) => {
+    e.preventDefault();
+    if (!groupName.trim()) {
+      alert("Group name is required!");
+      return;
+    }
+    if (!selectedUser) {
+      alert("Please select at least one user for the group.");
+      return;
+    }
+    try {
+      await createGroup({ name: groupName, admin: selectedUser });
+      setGroupName("");
+      setSelectedUser();
+      setShowCreateGroup(false);
+      fetchGroups();
+    } catch (error) {
+      console.log("Error creating group:", error.response?.data?.admin);
+      alert(error.response?.data?.admin[0]);
+    }
+  };
+
+  const handleEdit = async (group) => {
+    setEditingGroup(group);
+    setGroupName(group.name);
+
+    setEditAdmin(group.admin || "");
+    setEditedGroupAdmin(group.admin_name || "");
+    console.log("Editing group:", group);
+    setShowEditGroup(true);
+    try {
+      const users = await AllUsersWithGroups();
+      setAllUsers(users);
+    } catch (error) {
+      setAllUsers([]);
+    }
+  };
+
+  const closeEditGroupPopup = () => {
+    setShowEditGroup(false);
+    setEditingGroup(null);
+    setGroupName("");
+    setEditAdmin("");
+  };
+
+  const handleEditGroupSave = async (e) => {
+    e.preventDefault();
+    if (!groupName.trim()) {
+      alert("Group name is required!");
+      return;
+    }
+    if (!editAdmin) {
+      alert("Please select an admin for the group.");
+      return;
+    }
+    try {
+      await updateGroup(editingGroup.id, { name: groupName, admin: editAdmin });
+      setShowEditGroup(false);
+      setEditingGroup(null);
+      setGroupName("");
+      setEditAdmin("");
+      fetchGroups();
+    } catch (error) {
+      alert("Error updating group.");
+    }
+  };
 
   const handleDelete = async (groupId) => {
     if (!window.confirm("Are you sure you want to delete this group?")) return;
@@ -92,31 +172,117 @@ function ManageGroups() {
 
   return (
     <div className="tabel-container">
-      <h2 className="title"> {language?.users?.manage_groups}</h2>
-
-      <form className="group-form">
-        <input
-          type="text"
-          placeholder={language?.users?.enter_groupName}
-          value={groupName}
-          onChange={(e) => setGroupName(e.target.value)}
-          required
-        />
-        <button className="btn">
-          {editingGroup
-            ? language?.users?.update_group
-            : language?.users?.create_group}
+      <div className="flex center gap">
+        <h2 className="title"> {language?.users?.manage_groups}</h2>
+        <button className="btn" onClick={openCreateGroupPopup}>
+          {language?.users?.create_group}
         </button>
-        {editingGroup && (
-          <button
-            type="button"
-            className="cancel"
-            onClick={() => setEditingGroup(null)}
-          >
-            {language?.devices?.cancel}
-          </button>
-        )}
-      </form>
+      </div>
+      {showCreateGroup && (
+        <div className="edit add-user-form">
+          <form className="edit-user-form" onSubmit={handleCreateGroup}>
+            <h2>{language?.users?.create_group}</h2>
+            <div>
+              <label>Group Name</label>
+              <input
+                type="text"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label>Select Users</label>
+              <div className="selecte">
+                {console.log("Selected user:", selectedUser)}
+
+                <select
+                  name="admin"
+                  value={selectedUser || ""}
+                  onChange={(e) => {
+                    setSelectedUser(e.target.value);
+                  }}
+                >
+                  <option value="" disabled selected>
+                    Select a user
+                  </option>
+                  {allUsers.length === 0 ? (
+                    <option disabled>No users found.</option>
+                  ) : (
+                    allUsers.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.username}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </div>
+            <div className="edit-user-actions">
+              <button type="submit" className="btn">
+                Create
+              </button>
+              <button
+                type="button"
+                className="btn cancel"
+                onClick={closeCreateGroupPopup}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+      {showEditGroup && (
+        <div className="edit add-user-form">
+          <form className="edit-user-form" onSubmit={handleEditGroupSave}>
+            <h2>Edit Group</h2>
+            <div>
+              <label>Group Name</label>
+              <input
+                type="text"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label>Select Admin</label>
+              <div className="selecte">
+                <select
+                  name="admin"
+                  value={editAdmin || ""}
+                  onChange={(e) => setEditAdmin(e.target.value)}
+                >
+                  <option value={editingGroup.admin}>
+                    {editingGroup.admin_name} (current)
+                  </option>
+
+                  {allUsers
+                    .filter((user) => user.id !== editingGroup.admin)
+                    .map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.username}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+            <div className="edit-user-actions">
+              <button type="submit" className="btn">
+                Save
+              </button>
+              <button
+                type="button"
+                className="btn cancel"
+                onClick={closeEditGroupPopup}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       <div className="table">
         <table>
@@ -124,6 +290,7 @@ function ManageGroups() {
             <tr>
               <th> {language?.users?.id}</th>
               <th> {language?.users?.group_name}</th>
+              <th> admin</th>
               <th>{language?.users?.Operations}</th>
             </tr>
           </thead>
@@ -134,10 +301,11 @@ function ManageGroups() {
                   <tr>
                     <td>{group.id}</td>
                     <td>{group.name}</td>
+                    <td>{group.admin_name}</td>
                     <td>
                       <div className="action-buttons-container">
                         <button
-                          // onClick={() => handleEdit(group)}
+                          onClick={() => handleEdit(group)}
                           className="edit-button"
                         >
                           {language?.users?.Edit}
@@ -196,7 +364,8 @@ function ManageGroups() {
             ) : (
               <tr>
                 <td colSpan="4" style={{ textAlign: "center" }}>
-                  {language?.users?.no_groups_found}
+                  {language?.users?.no_groups_found} or there are no unlinked
+                  users.
                 </td>
               </tr>
             )}

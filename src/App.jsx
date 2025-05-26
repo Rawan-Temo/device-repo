@@ -9,22 +9,21 @@ import Login from "./pages/Login";
 import ProtectedRoute from "./ProtectedRouter";
 import { WebSocketProvider } from "./context/WebSocketProvider";
 import { AppProvider } from "./context/context";
+import RefreshToken from "./components/RefreshToken";
 
 function App() {
   const location = useLocation();
   return (
     <div className="App">
+      {/* {location.pathname !== "/login" && <RefreshToken />} */}
       {location.pathname !== "/login" && <Header />}
       <Routes>
         <Route path="/login" element={<Login />} />
 
         <Route element={<ProtectedRoute />}>
-     
-              <Route path="/*" element={<Dashboard />} />
-        
+          <Route path="/*" element={<Dashboard />} />
         </Route>
       </Routes>
-      {}
     </div>
   );
 }

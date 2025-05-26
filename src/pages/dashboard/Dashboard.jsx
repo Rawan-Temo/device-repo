@@ -26,7 +26,7 @@ import { Context } from "../../context/context";
 function Dashboard() {
   return (
     <div className="dashboard-container">
-      <ParticalBackground />
+      {/* <ParticalBackground /> */}
 
       <Sidebar />
       <Routes>
