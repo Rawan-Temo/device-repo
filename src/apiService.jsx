@@ -113,7 +113,6 @@ export const updateUser = async (id, userData) => {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     });
-    console.log("User updated:", response.data);
     return response.data;
   } catch (error) {
     console.error(
@@ -125,13 +124,11 @@ export const updateUser = async (id, userData) => {
 };
 export const getDevicesByGroup = async (groupId) => {
   try {
-    console.log("Fetching users for group:", groupId);
     const response = await axios.get(`${http}/api/devices/?id=${groupId}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     });
-    console.log(response);
     return response.data;
   } catch (error) {
     console.error(
@@ -161,7 +158,6 @@ export const getAllGroups = async () => {
 
 export const createGroup = async (group) => {
   try {
-    console.log("Creating group:", group);
     const response = await axios.post(
       `${http}/api/groups/`,
       {
@@ -267,7 +263,6 @@ export const addUserToGroup = async (groupId, userId) => {
         },
       }
     );
-    console.log("User added to group:", response.data);
     return response.data;
   } catch (error) {
     console.error(
@@ -300,7 +295,6 @@ export const removeUserFromGroup = async (groupId, userId) => {
 
 export const linkDevicetoGroup = async (deviceId, userId) => {
   try {
-    console.log("Linking device to user:", deviceId, userId);
     const response = await axios.patch(
       `${http}/api/devices/${deviceId}/`,
       {

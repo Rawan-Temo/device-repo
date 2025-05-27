@@ -11,6 +11,7 @@ import {
   AllUsersWithGroups,
   updateGroup,
 } from "../../../../apiService";
+import Loading from "../../../../components/loader/Loading";
 
 function ManageGroups() {
   const [groups, setGroups] = useState([]);
@@ -24,6 +25,7 @@ function ManageGroups() {
   const [showEditGroup, setShowEditGroup] = useState(false);
   const [editedGroupAdmin, setEditedGroupAdmin] = useState();
   const [editAdmin, setEditAdmin] = useState();
+  const [mainLoading, setMainLoading] = useState(false);
   const context = useContext(Context);
   const language = context?.selectedLang;
   useEffect(() => {
@@ -31,13 +33,14 @@ function ManageGroups() {
   }, []);
 
   const fetchGroups = async () => {
+    setMainLoading(true);
     try {
       const response = await getAllGroups();
-      console.log("Fetched groups:", response);
       setGroups(response);
     } catch (error) {
       console.error("Error fetching groups:", error);
     }
+    setMainLoading(false);
   };
 
   const openCreateGroupPopup = async () => {
@@ -45,7 +48,6 @@ function ManageGroups() {
     try {
       const users = await AllUsersWithGroups();
 
-      console.log("Filtered users:", users);
 
       setAllUsers(users);
     } catch (error) {
@@ -81,7 +83,6 @@ function ManageGroups() {
       setShowCreateGroup(false);
       fetchGroups();
     } catch (error) {
-      console.log("Error creating group:", error.response?.data?.admin);
       alert(error.response?.data?.admin[0]);
     }
   };
@@ -92,7 +93,6 @@ function ManageGroups() {
 
     setEditAdmin(group.admin || "");
     setEditedGroupAdmin(group.admin_name || "");
-    console.log("Editing group:", group);
     setShowEditGroup(true);
     try {
       const users = await AllUsersWithGroups();
@@ -172,6 +172,7 @@ function ManageGroups() {
 
   return (
     <div className="tabel-container">
+      {mainLoading && <Loading />}
       <div className="flex center gap">
         <h2 className="title"> {language?.users?.manage_groups}</h2>
         <button className="btn" onClick={openCreateGroupPopup}>
@@ -194,7 +195,6 @@ function ManageGroups() {
             <div>
               <label>Select Users</label>
               <div className="selecte">
-                {console.log("Selected user:", selectedUser)}
 
                 <select
                   name="admin"

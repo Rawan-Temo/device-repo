@@ -20,6 +20,7 @@ function ManageUsers() {
   const [openUserDeviceLists, setOpenUserDeviceLists] = useState({});
   const [selectedUserDevices, setSelectedUserDevices] = useState({});
   const [loadingUsers, setLoadingDevices] = useState(false);
+  const [mainLoading, setMainLoading] = useState(false);
   const context = useContext(Context);
   const language = context?.selectedLang;
   const [isEditing, setIsEditing] = useState(false);
@@ -40,19 +41,19 @@ function ManageUsers() {
   }, []);
 
   const fetchUsers = async () => {
+    setMainLoading(true);
     try {
       const response = await getAllUsers();
-
       setUsers(response);
     } catch (error) {
       console.error("Error fetching users:", error);
     }
+    setMainLoading(false);
   };
 
   const fetchGroups = async () => {
     try {
       const response = await getAllGroups();
-      console.log("Fetched groups:", response);
       setGroups(response);
     } catch (error) {
       console.error("Error fetching groups:", error);
@@ -150,10 +151,9 @@ function ManageUsers() {
     setLoadingDevices(false);
   };
 
-  console.log("Users:", users);
-
   return (
     <div className="tabel-container">
+      {mainLoading && <Loading />}
       <div className="edit ">
         {editUser && (
           <div className="edit-user-popup add-user-form">

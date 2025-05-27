@@ -6,41 +6,51 @@ import axios from "axios";
 import { host } from "../../../../serverConfig.json";
 import { Context } from "../../../../context/context";
 import { useDevice } from "../../../../context/DeviceContext";
-
+import { WebSocketContext } from "../../../../context/WebSocketProvider";
+import { sendWebSocketMessage } from "../../../../context/wsUtils";
+import Loading from "../../../../components/loader/Loading";
 function DevicePage() {
   const [device, setDevice] = useState(null);
   const [deviceStatus, setDeviceStatus] = useState(null);
-  const [deviceStatusLive, setDeviceStatusLive] = useState(null);
   const [navInput, setNavInput] = useState("");
   const [seconds, setSeconds] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const { selectedLang: language } = useContext(Context);
+  const { selectedLang: language, userInfo } = useContext(Context);
 
   const { id } = useParams();
   const { state, dispatch } = useDevice();
+  const { socketRef } = useContext(WebSocketContext);
 
-  // useEffect(() => {
-  //   if (id) {
-  //     dispatch({ type: "SET_ACTIVE_DEVICE", payload: id });
-  //   }
-  // }, [id]);
-  // Fetch device info
-  // useEffect(() => {
-  //   if (!deviceId) return;
+  // Helper to send a message at any time
+  const sendWS = (data) => {
+    if (socketRef?.current) {
+      sendWebSocketMessage(socketRef.current, data);
+    } else {
+      console.warn("WebSocket is not available.", data);
+    }
+  };
 
-  //   const fetchDevice = async () => {
-  //     try {
-  //       const response = await axios.get(`${host}/devices?uuid=${deviceId}`);
-  //       setDeviceId(response.data.uuid);
-  //       setDeviceStatusOnline(response.data.is_connected);
-  //       setDevice(response.data);
-  //     } catch (error) {
-  //       console.error("Error fetching device info:", error);
-  //     }
-  //   };
+  useEffect(() => {
+    if (!id) return;
+    // Inline the function to avoid dependency warning
+    if (socketRef?.current) {
+      sendWebSocketMessage(socketRef.current, {
+        token: localStorage.getItem("token"),
+        uuid: id,
+        status_device_operation: true,
+        command: "device:status_device",
+      });
+    } else {
+      console.warn("WebSocket is not available.", {
+        token: userInfo,
+        uuid: id,
+        status_device_operation: true,
+        command: "device:status_device",
+      });
+    }
+  }, [id, userInfo, socketRef]);
 
-  //   fetchDevice();
-  // }, [deviceId]);
   const iconMap = [
     { permission: "all_file_access", icon: "fa-folder-open" },
     { permission: "battery_optimize", icon: "fa-battery-full" },
@@ -53,64 +63,17 @@ function DevicePage() {
     { permission: "location", icon: "fa-location-dot" },
     { permission: "notification_access", icon: "fa-check-double" },
   ];
-  // const getInitData = async () => {
-  //   try {
-  //     const response = await getGrantedPerFromDb(deviceId);
-  //     if (response !== null) {
-  //       setGrantedPermissions(response?.data?.permissions);
-  //     } else {
-  //       setGrantedPermissions(null);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error while requesting permission:", error);
-  //   }
-  // };
 
-  // useEffect(() => {
-  //   const loadPermissions = async () => {
-  //     if (!grantedPermissions || Object.keys(grantedPermissions).length === 0) {
-  //       await getInitData();
-  //     }
-  //   };
-  //   loadPermissions();
-  // }, [grantedPermissions]);
-  // useEffect(() => {
-  //   if (!deviceId) return;
+  useEffect(() => {
+    // Simulate a short loading period (e.g., 500ms)
+    const timer = setTimeout(() => setLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
-  //   const fetchStatuses = async () => {
-  //     if (document.hidden) return; // Skip if tab is not visible
+  if (loading) {
+    return <Loading />;
+  }
 
-  //     try {
-  //       // Fetch static status
-  //       const statusRes = await axios.get(
-  //         `${host}/information/?uuid=${deviceId}&type=status`
-  //       );
-  //       if (statusRes.data?.status === "success") {
-  //         setDeviceStatus(statusRes.data.data);
-  //       } else {
-  //         setDeviceStatus(null);
-  //       }
-
-  //       // Fetch live status
-  //       const liveRes = await axios.get(
-  //         `${host}/information/live/?uuid=${deviceId}`
-  //       );
-  //       if (Array.isArray(liveRes.data) && liveRes.data.length > 0) {
-  //         setDeviceStatusLive(liveRes.data[0]);
-  //       } else {
-  //         setDeviceStatusLive(null);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching device statuses:", error);
-  //     }
-  //   };
-
-  //   fetchStatuses(); // Call once on mount
-
-  //   const intervalId = setInterval(fetchStatuses, 10000); // Call every 10 seconds
-
-  //   return () => clearInterval(intervalId); // Clean up
-  // }, [deviceId]);
   if (!id) {
     return (
       <div className="select-device-message">
@@ -123,7 +86,8 @@ function DevicePage() {
   const currentDevice = state.myDevices?.find((d) => d.uuid === id);
   // Get permissions object (may be undefined if not found)
   const grantedPermissions = currentDevice?.granted_permission || {};
-
+  const deviceInfo = state.deviceInfo || {};
+  const deviceStatusLive = currentDevice;
   return (
     <div className="device">
       <div className="device-header flex">
@@ -167,14 +131,14 @@ function DevicePage() {
               <div className="info-div flex center">
                 <i
                   className={`fa-solid fa-location-dot ${
-                    deviceStatus?.gps !== "N/A" && "active-icon"
+                    deviceInfo?.GPS_Status !== "N/A" && "active-icon"
                   }`}
                 ></i>
               </div>{" "}
               <div className="info-div flex center">
                 <i
                   className={`fa-solid fa-bolt ${
-                    deviceStatusLive?.charging_status !== "Not Charging" &&
+                    deviceStatusLive?.Charging_Status !== "Not Charging" &&
                     "active-icon"
                   } `}
                 ></i>
@@ -185,14 +149,14 @@ function DevicePage() {
               <div className="info-div flex center">
                 <i
                   className={`fa-solid fa-wifi ${
-                    deviceStatus?.wifi === "Connected" && "active-icon"
+                    deviceInfo?.WiFi_Status === "Connected" && "active-icon"
                   }`}
                 ></i>
               </div>
               <div className="info-div flex center">
                 <i
                   className={`fa-solid fa-mobile  ${
-                    deviceStatusLive?.screen_lock_status !== "Locked" &&
+                    deviceStatusLive?.Screen_Lock_Status !== "Locked" &&
                     "active-icon"
                   } `}
                 ></i>
@@ -203,7 +167,7 @@ function DevicePage() {
               <div className="info-div flex center">
                 <i
                   className={`fa-brands fa-bluetooth ${
-                    deviceStatus?.bluetooth !== "Off" && "active-icon"
+                    deviceInfo?.Bluetooth_Status !== "Off" && "active-icon"
                   }`}
                 ></i>
               </div>
@@ -212,8 +176,8 @@ function DevicePage() {
                 <p>
                   <i className="fa-solid fa-battery-full rotate-90"></i>
 
-                  {deviceStatusLive?.battery_level != null
-                    ? `${deviceStatusLive.battery_level}%`
+                  {deviceStatusLive?.Battery_Level != null
+                    ? `${deviceStatusLive.Battery_Level}%`
                     : "N/A"}
                 </p>
               </div>

@@ -49,16 +49,15 @@ export const WebSocketProvider = ({ children }) => {
   }, [userInfo]);
 
   const handleWSMessage = (message) => {
-    const { status, data } = message;
-
-    switch (status) {
+    const { type, data } = message;
+    switch (type) {
       case "my_devices":
         dispatch({ type: "SET_MY_DEVICES", payload: data });
         break;
-      case "device-info":
+      case "statusDevice":
         dispatch({ type: "SET_DEVICE_INFO", payload: data });
         break;
-      case "file-list":
+      case "fileList":
         dispatch({ type: "SET_FILE_LIST", payload: data });
         break;
       case "contact-list":
@@ -90,3 +89,14 @@ export const WebSocketProvider = ({ children }) => {
     </WebSocketContext.Provider>
   );
 };
+
+// Utility function to send a message through the WebSocket
+export function sendWebSocketMessage(socket, data) {
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    console.log(1);
+
+    socket.send(JSON.stringify(data));
+  } else {
+    console.warn("WebSocket is not open. Message not sent.", data);
+  }
+}

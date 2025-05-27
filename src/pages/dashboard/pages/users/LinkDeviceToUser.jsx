@@ -27,7 +27,6 @@ function LinkDeviceToUser() {
   const fetchUsers = async () => {
     try {
       const response = await getAllGroups();
-      console.log("Fetched users:", response);
       setGroups(response);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -109,16 +108,13 @@ function LinkDeviceToUser() {
           <select
             value={selectedDeviceId || ""}
             onChange={(e) => {
-              {
-                console.log(e.target);
-              }
+             
               setSelectedDeviceId(e.target.value);
             }}
           >
             <option value="">-- {language?.users?.Select_device} --</option>
             {devices.map((device) => (
               <option key={device.id} value={device.uuid}>
-                {console.log(device)}
                 {device.name}
               </option>
             ))}

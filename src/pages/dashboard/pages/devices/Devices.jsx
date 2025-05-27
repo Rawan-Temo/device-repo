@@ -18,7 +18,6 @@ const DeviceList = ({ activeTab }) => {
   const myDevices = state?.myDevices || [];
 
   // Split devices into active and offline
-  console.log("myDevices", myDevices);
   const activeDevices = myDevices.filter((device) => device.is_connected);
 
   const offlineDevices = myDevices.filter((device) => !device.is_connected);

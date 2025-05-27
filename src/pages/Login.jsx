@@ -14,8 +14,6 @@ function Login() {
     setError(""); // Clear previous errors
     try {
       const response = await login(username, password); // Call login function
-      console.log("Login response:", response); // Debugging log
-      console.log("Login response:", response.access); // Debugging log
 
       if (response.access) {
         localStorage.setItem("token", response.access); // Store JWT

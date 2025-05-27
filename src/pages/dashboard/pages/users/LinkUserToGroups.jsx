@@ -27,7 +27,6 @@ function LinkUserToGroups() {
   const fetchUsers = async () => {
     try {
       const response = await AllUsersWithGroups();
-      console.log("Fetched users:", response);
       setUsers(response);
     } catch (error) {
       console.error("Error fetching users:", error);
