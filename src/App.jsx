@@ -15,11 +15,10 @@ function App() {
   const location = useLocation();
   return (
     <div className="App">
-      {/* {location.pathname !== "/login" && <RefreshToken />} */}
+      {location.pathname !== "/login" && <RefreshToken />}
       {location.pathname !== "/login" && <Header />}
       <Routes>
         <Route path="/login" element={<Login />} />
-
         <Route element={<ProtectedRoute />}>
           <Route path="/*" element={<Dashboard />} />
         </Route>

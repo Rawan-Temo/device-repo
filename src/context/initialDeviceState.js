@@ -8,4 +8,5 @@ export const initialDeviceState = {
   callLogList: [],
   grantedPermissions: [],
   notificationList: [],
+  downloadList: {},
 };

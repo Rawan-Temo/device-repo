@@ -32,7 +32,7 @@ export function deviceReducer(state, action) {
       return { ...state, grantedPermissions: action.payload };
 
     case "SET_AUTO_DOWNLOADS":
-      return { ...state, autodownloadtasks: action.payload };
+      return { ...state, downloadList: action.payload };
 
     case "SET_NOTIFICATIONS":
       return { ...state, notificationList: action.payload };

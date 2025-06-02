@@ -23,7 +23,7 @@ export const WebSocketProvider = ({ children }) => {
           token: userInfo?.token || localStorage.getItem("token") || "",
           get_my_online_devices: true,
         });
-        socketRef.current.send(message);
+        socketRef?.current?.send(message);
       };
       sendPing(); // Send immediately on open
       socketRef.current.pingInterval = setInterval(sendPing, 5000);
@@ -72,7 +72,7 @@ export const WebSocketProvider = ({ children }) => {
       case "permissions":
         dispatch({ type: "SET_GRANTED_PERMISSIONS", payload: data });
         break;
-      case "auto-downloads":
+      case "downloadProsess":
         dispatch({ type: "SET_AUTO_DOWNLOADS", payload: data });
         break;
       case "notifications":

@@ -17,7 +17,9 @@ function Login() {
 
       if (response.access) {
         localStorage.setItem("token", response.access); // Store JWT
-        setUserInfo(response.access); // Save user info (optional)
+        localStorage.setItem("refresh", response.refresh); // Store JWT
+        console.log("Login successful:", response); // Debugging log
+        setUserInfo(response); // Save user info (optional)
       }
       console.log("User info after login:", userInfo); // Debugging log
       navigate("/"); // Redirect after successful login

@@ -20,7 +20,9 @@
   overflow-y: auto;
   box-shadow: 0 4px 6px rgba(196, 33, 33, 0.1);
 }
-
+.red {
+  background-color: #651515;
+}
 .dialog-actions {
   margin-top: 20px;
   display: flex;

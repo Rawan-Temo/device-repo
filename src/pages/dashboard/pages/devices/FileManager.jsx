@@ -43,6 +43,7 @@ const FileManager = () => {
   // Helper to send a message at any time
   const sendWS = (data) => {
     if (socketRef?.current) {
+      console.log("Sending WebSocket message:", data);
       sendWebSocketMessage(socketRef.current, data);
     } else {
       console.warn("WebSocket is not available.", data);

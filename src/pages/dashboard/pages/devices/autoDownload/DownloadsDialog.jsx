@@ -4,6 +4,8 @@ import { use } from "react";
 
 import { set } from "date-fns";
 import { Context } from "../../../../../context/context";
+import { useDevice } from "../../../../../context/DeviceContext";
+import { WebSocketContext } from "../../../../../context/WebSocketProvider";
 
 const DownloadsDoalog = ({ isOpen, id, onClose }) => {
   const [downloadsList, SetDownloadsList] = useState([]);
@@ -13,6 +15,32 @@ const DownloadsDoalog = ({ isOpen, id, onClose }) => {
   const [error, setError] = useState(null);
   const context = useContext(Context);
   const language = context?.selectedLang;
+  const { state, dispatch } = useDevice();
+  const { socketRef } = useContext(WebSocketContext);
+  useEffect(() => {
+    console.log(state);
+    SetDownloadsList(state?.downloadList.downloads || []);
+  }, [state?.downloadList]);
+  console.log("Downloads List:", downloadsList);
+
+  // useEffect(() => {
+  //   // Send a WebSocket message to get the initial downloads list when dialog opens
+  //   if (isOpen && socketRef?.current) {
+  //     console.log("Sending WebSocket message to get download list");
+  //     console.log({
+  //       token: localStorage.getItem("token"),
+  //       uuid: id,
+  //       get_download_list: true,
+  //     });
+  //     socketRef.current.send(
+  //       JSON.stringify({
+  //         token: localStorage.getItem("token"),
+  //         uuid: id,
+  //         get_download_list: true,
+  //       })
+  //     );
+  //   }
+  // }, [isOpen, id, socketRef]);
 
   // useEffect(() => {
   //   const autoFetchData = async () => {
@@ -49,6 +77,22 @@ const DownloadsDoalog = ({ isOpen, id, onClose }) => {
   // };
 
   if (!isOpen) return null;
+  const onStopDownload = (path) => {
+    console.log("Stopping download for path:", path);
+    if (socketRef?.current) {
+      socketRef.current.send(
+        JSON.stringify({
+          token: localStorage.getItem("token"),
+          uuid: id,
+          file_operation: true,
+          action: "cancel", // "move", "copy", "delete_file", "delete_folder", "download"
+          path: `/sdcard/${path}`,
+        })
+      );
+    } else {
+      console.warn("WebSocket is not available.");
+    }
+  };
 
   return (
     <div className="dialog-overlay">
@@ -61,7 +105,7 @@ const DownloadsDoalog = ({ isOpen, id, onClose }) => {
           <button className="reload-button">
             <i className="fa-solid fa-sync-alt"></i>
           </button>
-          <button  className="reload-button">
+          <button className="reload-button">
             <i className="fa-solid fa-broom"></i>
           </button>
           <input
@@ -85,14 +129,18 @@ const DownloadsDoalog = ({ isOpen, id, onClose }) => {
                   <th>percenatge</th>
                   <th>total size</th>
                   <th>{language?.devices?.downloaded_date}</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {downloadsList?.length > 0 ? (
                   downloadsList.map((item) => {
+                    const fileName = item.file_name.split("/").pop();
+                    console.log("Item:", fileName);
+
                     return (
                       <tr key={item.id}>
-                        <td>{item.file_name}</td>
+                        <td>{fileName}</td>
                         <td style={{ width: "220px" }}>
                           <div
                             style={{
@@ -130,6 +178,15 @@ const DownloadsDoalog = ({ isOpen, id, onClose }) => {
                               )} MB`}
                         </td>
                         <td>{item.created_at}</td>
+                        <td>
+                          {" "}
+                          <button
+                            onClick={() => onStopDownload(item.file_name)}
+                            className="btn red"
+                          >
+                            <i className="fa-solid fa-close"></i>
+                          </button>
+                        </td>
                       </tr>
                     );
                   })
