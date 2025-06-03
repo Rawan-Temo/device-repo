@@ -7,6 +7,19 @@ import { Context } from "../../../../context/context";
 import { useDevice } from "../../../../context/DeviceContext";
 import { WebSocketContext } from "../../../../context/WebSocketProvider";
 
+const iconMap = [
+  { permission: "all_file_access", icon: "fa-folder-open" },
+  { permission: "battery_optimize", icon: "fa-battery-full" },
+  { permission: "notification", icon: "fa-bell" },
+  { permission: "auto_display_in_background", icon: "fa-display" },
+  { permission: "contact", icon: "fa-address-book" },
+  { permission: "sms", icon: "fa-comment-sms" },
+  { permission: "call_log", icon: "fa-phone-volume" },
+  { permission: "microphone", icon: "fa-microphone" },
+  { permission: "location", icon: "fa-location-dot" },
+  { permission: "notification_access", icon: "fa-check-double" },
+];
+
 const DeviceList = ({ activeTab }) => {
   const context = useContext(Context);
   const language = context?.selectedLang;
@@ -50,6 +63,17 @@ const DeviceList = ({ activeTab }) => {
           <div className="chat-info">
             <h3 className="chat-name">{device.name}</h3>
             <h3 className="chat-name">{device.last_seen}</h3>
+          </div>
+          <div className="granted-permissions icons">
+            {iconMap.map(({ permission, icon }) =>
+              device.granted_permission?.[permission] ? (
+                <i
+                  key={permission}
+                  className={`fa-solid ${icon} active-icon`}
+                  title={permission}
+                ></i>
+              ) : null
+            )}
           </div>
         </NavLink>
       ))}

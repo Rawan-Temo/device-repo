@@ -4,6 +4,11 @@ import { useParams } from "react-router";
 import AddCallerNameDialog from "./permissions/AddCallerNameDialog";
 import { Context } from "../../../../context/context";
 import LiveClock from "./LiveClock";
+import { useDevice } from "../../../../context/DeviceContext";
+import {
+  sendWebSocketMessage,
+  WebSocketContext,
+} from "../../../../context/WebSocketProvider";
 
 const PermissionsTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -14,13 +19,34 @@ const PermissionsTable = () => {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
-  const [selectedPermission, setSelectedPermission] = useState(null);
+  const [selectedPermission, setSelectedPermission] = useState([]);
+  const [grantedPermissions, setGrantedPermissions] = useState([]);
 
   const context = useContext(Context);
   const language = context?.selectedLang;
 
   const { tabId } = useParams();
+  const { state, dispatch } = useDevice();
+  const { socketRef } = useContext(WebSocketContext);
+  // Request file list on device or folder path change
 
+  const { id } = useParams();
+
+  // Helper to send a message at any time
+  const sendWS = (data) => {
+    if (socketRef?.current) {
+      sendWebSocketMessage(socketRef.current, data);
+    } else {
+      console.warn("WebSocket is not available.", data);
+    }
+  };
+  useEffect(() => {
+    const device = state?.myDevices?.find((device) => device.uuid === id);
+    const permission = device?.granted_permission || null;
+
+    console.log("Permissions:", permission);
+    setGrantedPermissions(permission);
+  }, [id, state?.myDevices]);
   // const handleReload = async () => {
   //   try {
   //     setMessage("");
@@ -64,61 +90,68 @@ const PermissionsTable = () => {
   //   loadPermissions();
   // }, [grantedPermissions]);
 
-  // const permissionslist = useMemo(() => {
-  //   try {
-  //     return Object.entries(grantedPermissions).map(([key, value], index) => {
-  //       return {
-  //         id: index + 1,
-  //         name: key,
-  //         status: value ? "granted" : "pending",
-  //       };
-  //     });
-  //   } catch (error) {
-  //     console.log(" ");
-  //   }
-  // }, [grantedPermissions]);
-  // useEffect(() => {
-  //   setFilteredTabs(
-  //     permissionslist?.filter((log) =>
-  //       log.name.toLowerCase().includes(searchTerm.toLowerCase())
-  //     )
-  //   );
-  // }, [searchTerm, permissionslist]);
+  const permissionslist = useMemo(() => {
+    try {
+      return Object.entries(grantedPermissions).map(([key, value], index) => {
+        return {
+          id: index + 1,
+          name: key,
+          status: value ? "granted" : "pending",
+        };
+      });
+    } catch (error) {
+      console.log(" ");
+    }
+  }, [grantedPermissions]);
+  useEffect(() => {
+    setFilteredTabs(
+      permissionslist?.filter((log) =>
+        log.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    );
+  }, [searchTerm, permissionslist]);
 
   const toggleExpand = () => {
     setExpanded(!expanded);
   };
 
-  // const handleAddCallerName = (perName) => {
-  //   setSelectedPermission(perName);
-  //   setAddDialogOpen(true);
-  // };
+  const handleAddCallerName = (perName) => {
+    setSelectedPermission(perName);
+    setAddDialogOpen(true);
+  };
 
-  // const handleRequest = async (newRequest) => {
-  //   setMessage(null);
-  //   try {
-  //     if (!deviceStatusOnline) {
-  //       setError("device is offline.");
-  //       setLoading(false);
-  //       return;
-  //     }
-  //     setLoading(true);
-  //     const response = await requestPer(
-  //       deviceId,
-  //       newRequest.permission,
-  //       newRequest.callerName
-  //     );
-  //     if (response) {
-  //       setMessage(`${newRequest.permission} request sent successfully!`);
-  //     } else {
-  //       console.error(`Failed to request ${newRequest.permission}`);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error while requesting permission:", error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  const handleRequest = async (newRequest) => {
+    setMessage(null);
+    try {
+      // Optionally check device status if needed
+      setLoading(true);
+      // Send WebSocket message to request permission
+      if (socketRef?.current) {
+        console.log({
+          token: localStorage.getItem("token"),
+          uuid: id,
+          permission_operation: true,
+          caller: newRequest.callerName,
+          type: selectedPermission,
+        });
+        sendWS( {
+          token: localStorage.getItem("token"),
+          uuid: id,
+          permission_operation: true,
+          caller: newRequest.callerName,
+          type: selectedPermission,
+        });
+        setMessage(`${newRequest.permission} request sent successfully!`);
+      } else {
+        setError("WebSocket is not available.");
+      }
+    } catch (error) {
+      console.error("Error while requesting permission:", error);
+      setError("Failed to send permission request.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="tab-content">
@@ -171,7 +204,7 @@ const PermissionsTable = () => {
                       </td>
                       <td>
                         <button
-                          // onClick={() => handleAddCallerName(item?.name)}
+                          onClick={() => handleAddCallerName(item?.name)}
                           disabled={isGranted}
                           className="action-button"
                         >
@@ -199,7 +232,7 @@ const PermissionsTable = () => {
         isOpen={isAddDialogOpen}
         selectedPermission={selectedPermission}
         onClose={() => setAddDialogOpen(false)}
-        // onSave={handleRequest}
+        onSave={handleRequest}
       />
     </div>
   );

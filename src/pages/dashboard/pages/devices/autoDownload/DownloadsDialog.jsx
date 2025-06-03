@@ -18,29 +18,21 @@ const DownloadsDoalog = ({ isOpen, id, onClose }) => {
   const { state, dispatch } = useDevice();
   const { socketRef } = useContext(WebSocketContext);
   useEffect(() => {
-    console.log(state);
     SetDownloadsList(state?.downloadList.downloads || []);
   }, [state?.downloadList]);
-  console.log("Downloads List:", downloadsList);
 
-  // useEffect(() => {
-  //   // Send a WebSocket message to get the initial downloads list when dialog opens
-  //   if (isOpen && socketRef?.current) {
-  //     console.log("Sending WebSocket message to get download list");
-  //     console.log({
-  //       token: localStorage.getItem("token"),
-  //       uuid: id,
-  //       get_download_list: true,
-  //     });
-  //     socketRef.current.send(
-  //       JSON.stringify({
-  //         token: localStorage.getItem("token"),
-  //         uuid: id,
-  //         get_download_list: true,
-  //       })
-  //     );
-  //   }
-  // }, [isOpen, id, socketRef]);
+  useEffect(() => {
+    // Send a WebSocket message to get the initial downloads list when dialog opens
+    if (isOpen && socketRef?.current) {
+      socketRef.current.send(
+        JSON.stringify({
+          token: localStorage.getItem("token"),
+          uuid: id,
+          get_download_list: true,
+        })
+      );
+    }
+  }, [isOpen, id, socketRef]);
 
   // useEffect(() => {
   //   const autoFetchData = async () => {
@@ -78,7 +70,6 @@ const DownloadsDoalog = ({ isOpen, id, onClose }) => {
 
   if (!isOpen) return null;
   const onStopDownload = (path) => {
-    console.log("Stopping download for path:", path);
     if (socketRef?.current) {
       socketRef.current.send(
         JSON.stringify({
@@ -86,7 +77,8 @@ const DownloadsDoalog = ({ isOpen, id, onClose }) => {
           uuid: id,
           file_operation: true,
           action: "cancel", // "move", "copy", "delete_file", "delete_folder", "download"
-          path: `/sdcard/${path}`,
+          path: `${path}`,
+          dest: `${path}`, // if needed
         })
       );
     } else {
@@ -136,8 +128,9 @@ const DownloadsDoalog = ({ isOpen, id, onClose }) => {
                 {downloadsList?.length > 0 ? (
                   downloadsList.map((item) => {
                     const fileName = item.file_name.split("/").pop();
-                    console.log("Item:", fileName);
 
+                    let recivedPercentage =
+                      (item.received_size * 100) / item.total_size;
                     return (
                       <tr key={item.id}>
                         <td>{fileName}</td>
@@ -151,9 +144,17 @@ const DownloadsDoalog = ({ isOpen, id, onClose }) => {
                           >
                             <div
                               style={{
-                                width: `${item.progress}%`,
+                                width: `${
+                                  item.progress === -1
+                                    ? recivedPercentage
+                                    : item.progress
+                                }%`,
                                 backgroundColor:
-                                  item.progress === 100 ? "#4caf50" : "#2196f3",
+                                  item.progress === -1
+                                    ? "rgb(127 12 12)"
+                                    : item.progress === 100
+                                    ? "#4caf50"
+                                    : "#2196f3",
                                 height: "10px",
                                 borderRadius: "5px",
                                 transition: "width 0.5s ease",
@@ -162,10 +163,12 @@ const DownloadsDoalog = ({ isOpen, id, onClose }) => {
                           </div>
                         </td>
                         <td>
-                          {item.progress === 100
+                          {item.progress === -1
+                            ? `cancelled`
+                            : item.progress === 100
                             ? 100
                             : Math.round(item.progress)}
-                          %
+                          {!(item.progress === -1) && `%`}
                         </td>
                         <td>
                           {item.total_size >= 1024 * 1024 * 1024

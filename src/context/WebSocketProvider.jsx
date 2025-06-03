@@ -93,8 +93,6 @@ export const WebSocketProvider = ({ children }) => {
 // Utility function to send a message through the WebSocket
 export function sendWebSocketMessage(socket, data) {
   if (socket && socket.readyState === WebSocket.OPEN) {
-    console.log(1);
-
     socket.send(JSON.stringify(data));
   } else {
     console.warn("WebSocket is not open. Message not sent.", data);

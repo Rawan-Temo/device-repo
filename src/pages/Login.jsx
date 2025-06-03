@@ -18,10 +18,8 @@ function Login() {
       if (response.access) {
         localStorage.setItem("token", response.access); // Store JWT
         localStorage.setItem("refresh", response.refresh); // Store JWT
-        console.log("Login successful:", response); // Debugging log
         setUserInfo(response); // Save user info (optional)
       }
-      console.log("User info after login:", userInfo); // Debugging log
       navigate("/"); // Redirect after successful login
     } catch (err) {
       setError(err); // Show error message

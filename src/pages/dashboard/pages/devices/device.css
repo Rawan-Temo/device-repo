@@ -109,7 +109,13 @@ body.arabic .tabs {
   display: flex;
   flex-direction: column;
 }
-
+.granted-permissions {
+  display: flex;
+}
+.granted-permissions i{
+      font-size: 10px;
+    padding: 0px;
+}
 .chat-name {
   font-size: 1.1em;
   font-weight: bold;

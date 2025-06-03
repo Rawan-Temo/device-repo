@@ -43,7 +43,6 @@ const FileManager = () => {
   // Helper to send a message at any time
   const sendWS = (data) => {
     if (socketRef?.current) {
-      console.log("Sending WebSocket message:", data);
       sendWebSocketMessage(socketRef.current, data);
     } else {
       console.warn("WebSocket is not available.", data);
@@ -60,6 +59,11 @@ const FileManager = () => {
   }, [id, folderPath]);
 
   useEffect(() => {
+    setFiles([{ name: "sdcard", isDirectory: true, path: "/sdcard" }]);
+    dispatch({ type: "SET_FILE_LIST", payload: [] });
+  }, []);
+
+  useEffect(() => {
     // Wait for fileList to arrive before showing file manager
     if (
       state.fileList &&
@@ -67,7 +71,6 @@ const FileManager = () => {
       state.fileList.length > 0
     ) {
       const fileDetails = state?.fileList;
-      console.log("File details received:", fileDetails);
       setFiles((prevFiles) => [
         ...prevFiles.filter(
           (f) => !fileDetails.some((newFile) => newFile.path === f.path)
@@ -81,7 +84,6 @@ const FileManager = () => {
 
   const handleOpen = (file, forceRefresh = false) => {
     setFolderPath(file.path);
-    console.log(file.path);
 
     if (socketRef?.current && socketRef.current.readyState === 1) {
       socketRef.current.send(

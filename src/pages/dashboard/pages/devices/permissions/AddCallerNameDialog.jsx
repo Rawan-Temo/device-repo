@@ -17,7 +17,6 @@ const AddCallelrNameDialog = ({
       return;
     }
 
-
     const newRequest = {
       permission: selectedPermission,
       callerName: name,
