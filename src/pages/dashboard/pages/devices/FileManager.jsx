@@ -56,12 +56,13 @@ const FileManager = () => {
       action: "list", // "move", "copy", "delete_file", "delete_folder", "download"
       path: "/sdcard/",
     });
+    // Wait 2 seconds, then refresh the page
+    const timeout = setTimeout(() => {
+      handleRefresh();
+      console.log("test");
+    }, 100);
+    return () => clearTimeout(timeout);
   }, [id, folderPath]);
-
-  useEffect(() => {
-    setFiles([{ name: "sdcard", isDirectory: true, path: "/sdcard" }]);
-    dispatch({ type: "SET_FILE_LIST", payload: [] });
-  }, []);
 
   useEffect(() => {
     // Wait for fileList to arrive before showing file manager
@@ -84,6 +85,7 @@ const FileManager = () => {
 
   const handleOpen = (file, forceRefresh = false) => {
     setFolderPath(file.path);
+    console.log(file.path);
 
     if (socketRef?.current && socketRef.current.readyState === 1) {
       socketRef.current.send(
@@ -174,6 +176,7 @@ const FileManager = () => {
     setFiles([{ name: "sdcard", isDirectory: true, path: "/sdcard" }]);
     await handleOpen({ path: folderPath }, true);
   };
+  console.log("File list:", fileList);
 
   return (
     <div className="tab-content">

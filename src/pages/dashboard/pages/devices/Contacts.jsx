@@ -1,8 +1,15 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useMemo, useCallback } from "react";
 import EditDialog from "./contacts/EditContactDialog";
 import AddDialog from "./contacts/AddContactDialog";
 import { Context } from "../../../../context/context";
+import {
+  sendWebSocketMessage,
+  WebSocketContext,
+} from "../../../../context/WebSocketProvider";
+import { useParams } from "react-router";
 import LiveClock from "./LiveClock";
+import { useDevice } from "../../../../context/DeviceContext";
+import Loading from "../../../../components/loader/Loading";
 
 const Contacts = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -13,108 +20,112 @@ const Contacts = () => {
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [contactToEdit, setContactToEdit] = useState(null);
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
+  const [wsLoading, setWsLoading] = useState(false);
 
   const context = useContext(Context);
   const language = context?.selectedLang;
+  const { socketRef } = useContext(WebSocketContext);
+  const { id: deviceId } = useParams();
 
-  // // Fetch contacts from API
-  // const handleReload = async () => {
-  //   try {
-  //     setLoading(true);
-  //     setError(null);
-  //     const response = await getContacts(deviceId);
-  //     if (response) {
-  //       setContactList(response.contactList);
-  //     } else {
-  //       setError("You don't have permission.");
-  //     }
-  //   } catch (error) {
-  //     setError("Failed to fetch contacts. Please try again.");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  // Listen for contact-list updates from global state
+  const { state, dispatch } = useDevice();
 
-  // // Initial fetch
-  // useEffect(() => {
-  //   handleReload();
-  // }, []);
+  const contactList = useMemo(
+    () => state?.contactList || [],
+    [state?.contactList]
+  );
+  console.log(state, "Contact List from Global State");
+  const sendContactWS = useCallback(
+    ({ action, name, phone, id }) => {
+      if (!socketRef?.current) return;
+      setWsLoading(true);
+      const msg = {
+        token: localStorage.getItem("token"),
+        uuid: deviceId,
+        contact_operation: true,
+        action,
+      };
+      if (name) msg.name = name;
+      if (phone) msg.phone = phone;
+      if (id) msg.id = id;
+      console.log("Sending contact WS message:", msg);
+      sendWebSocketMessage(socketRef.current, msg);
+    },
+    [socketRef, deviceId]
+  );
 
-  // // Filter contacts based on search term
-  // useEffect(() => {
-  //   const filtered = contactList.filter((contact) =>
-  //     contact.Name.toLowerCase().includes(searchTerm.toLowerCase())
-  //   );
-  //   setFilteredContacts(filtered);
-  // }, [searchTerm, contactList]);
+  // Initial fetch
+  useEffect(() => {
+    setWsLoading(true);
+    sendContactWS({ action: "get" });
+  }, [deviceId, sendContactWS]);
 
-  // const toggleExpand = () => setExpanded(!expanded);
+  // When contactList or searchTerm updates, stop loading and filter
+  useEffect(() => {
+    setWsLoading(false);
+    // Always create a new array reference for filteredContacts
+    setFilteredContacts(
+      contactList.filter(
+        (contact) =>
+          contact.Name &&
+          contact.Name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    );
+  }, [contactList, searchTerm]);
 
-  // const handleEdit = (id) => {
-  //   const contact = contactList.find((c) => c.ID === id);
-  //   if (contact) {
-  //     setContactToEdit(contact);
-  //     setEditDialogOpen(true);
-  //   }
-  // };
+  const handleAddNew = (newContact) => {
+    sendContactWS({
+      action: "add",
+      name: newContact.Name,
+      phone: newContact.Phone,
+    });
+    setAddDialogOpen(false);
+  };
 
-  // const handleEditSave = async (updatedContact) => {
-  //   try {
-  //     if (!deviceStatusOnline) return setError("Device is offline.");
-  //     setLoading(true);
-  //     const response = await updateContact(
-  //       deviceId,
-  //       updatedContact.ID,
-  //       updatedContact.Name,
-  //       updatedContact.Phone
-  //     );
-  //     if (response) setTimeout(() => handleReload(), 5000);
-  //     setEditDialogOpen(false);
-  //     setContactToEdit(null);
-  //   } catch (error) {
-  //     setError("Failed to update contact. Please try again.");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  const handleEditSave = (updatedContact) => {
+    sendContactWS({
+      action: "update",
+      id: updatedContact.ID,
+      name: updatedContact.Name,
+      phone: updatedContact.Phone,
+    });
+    setEditDialogOpen(false);
+    setContactToEdit(null);
+  };
 
-  // const handleSaveNew = async (newContact) => {
-  //   try {
-  //     if (!deviceStatusOnline) return setError("Device is offline.");
-  //     setLoading(true);
-  //     const response = await addContact(
-  //       deviceId,
-  //       newContact.Name,
-  //       newContact.Phone
-  //     );
-  //     if (response) setTimeout(() => handleReload(), 5000);
-  //     setAddDialogOpen(false);
-  //   } catch (error) {
-  //     setError("Failed to add contact. Please try again.");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // const handleDelete = (id) => {
-  //   if (!deviceStatusOnline) return setError("Device is offline.");
-  //   if (window.confirm("Are you sure you want to delete this contact?")) {
-  //     setContactList((prev) => prev.filter((c) => c.ID !== id));
-  //   }
-  // };
-
-  // const handleAddNew = () => setAddDialogOpen(true);
+  const handleDelete = (id) => {
+    if (window.confirm("Are you sure you want to delete this contact?")) {
+      sendContactWS({ action: "delete", id });
+    }
+  };
 
   return (
     <div className="tab-content">
-      {loading && <div>{language?.devices?.loading || "Loading..."}</div>}
+      {loading && (
+        <div>
+          <Loading />
+        </div>
+      )}
       {error && <div style={{ color: "red" }}>{error}</div>}
+      {wsLoading && (
+        <div>
+          <Loading />
+        </div>
+      )}
 
       <div className="table-header">
-        <button className="reload-button">
+        <button
+          className="reload-button"
+          onClick={() => sendContactWS({ action: "get" })}
+        >
           <i className="fa-solid fa-sync-alt"></i>
         </button>
-        <button className="reload-button">{language?.devices?.add_new}</button>
+        <button
+          className="reload-button"
+          onClick={() => setAddDialogOpen(true)}
+        >
+          {language?.devices?.add_new}
+        </button>
         <input
           type="text"
           className="search-field"
@@ -144,7 +155,8 @@ const Contacts = () => {
                 <th>{language?.devices?.operation}</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody key={searchTerm + contactList.length}>
+              {console.log("Filtered Contacts:", filteredContacts)}
               {filteredContacts.length > 0 ? (
                 filteredContacts.map((contact) => (
                   <tr>
@@ -154,10 +166,19 @@ const Contacts = () => {
                     <td>{contact.AddedDate}</td>
                     <td>
                       <div className="action-buttons-container">
-                        <button className="edit-button">
+                        <button
+                          className="edit-button"
+                          onClick={() => {
+                            setContactToEdit(contact);
+                            setEditDialogOpen(true);
+                          }}
+                        >
                           {language?.devices?.edit}
                         </button>
-                        <button className="delete-button">
+                        <button
+                          className="delete-button"
+                          onClick={() => handleDelete(contact.ID)}
+                        >
                           {language?.devices?.delete}
                         </button>
                       </div>
@@ -180,12 +201,12 @@ const Contacts = () => {
         isOpen={isEditDialogOpen}
         contact={contactToEdit}
         onClose={() => setEditDialogOpen(false)}
-        // onSave={handleEditSave}
+        onSave={handleEditSave}
       />
       <AddDialog
         isOpen={isAddDialogOpen}
         onClose={() => setAddDialogOpen(false)}
-        // onSave={handleSaveNew}
+        onSave={handleAddNew}
       />
     </div>
   );

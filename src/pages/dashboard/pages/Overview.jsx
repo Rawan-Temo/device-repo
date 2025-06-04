@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { Context } from "../../../context/context";
-import { host } from "../../../serverConfig.json";
+import { host, http } from "../../../serverConfig.json";
 import axios from "axios";
 import Loading from "../../../components/loader/Loading";
 
@@ -12,29 +12,29 @@ function Overview() {
   const context = useContext(Context);
   const language = context?.selectedLang;
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const response = await axios.get(`${host}/devices`);
-  //       const dowload = await axios.get(`${host}/downloads/all`);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(`${http}/devices`);
+        const dowload = await axios.get(`${http}/downloads/all`);
 
-  //       setDownloads(dowload.data);
+        setDownloads(dowload.data);
+        const devices = response.data;
+        console.log("Downloads:", devices);
+        setAllDevices(devices);
+        const activeDevice = devices.filter(
+          (device) => device.is_connected === true
+        );
+        setActiveDevices(activeDevice);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error while fetching devices:", error);
+        setLoading(false);
+      }
+    };
 
-  //       const devices = response.data;
-  //       setAllDevices(devices);
-  //       const activeDevice = devices.filter(
-  //         (device) => device.is_connected === true
-  //       );
-  //       setActiveDevices(activeDevice);
-  //       setLoading(false);
-  //     } catch (error) {
-  //       console.error("Error while fetching devices:", error);
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, []);
+    fetchData();
+  }, []);
 
   if (loading) {
     return <Loading />;

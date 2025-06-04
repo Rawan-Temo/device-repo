@@ -23,7 +23,7 @@ export const WebSocketProvider = ({ children }) => {
           token: userInfo?.token || localStorage.getItem("token") || "",
           get_my_online_devices: true,
         });
-        socketRef?.current?.send(message);
+        socketRef.current.send(message);
       };
       sendPing(); // Send immediately on open
       socketRef.current.pingInterval = setInterval(sendPing, 5000);
@@ -60,10 +60,10 @@ export const WebSocketProvider = ({ children }) => {
       case "fileList":
         dispatch({ type: "SET_FILE_LIST", payload: data });
         break;
-      case "contact-list":
+      case "contactList":
         dispatch({ type: "SET_CONTACT_LIST", payload: data });
         break;
-      case "message-list":
+      case "messageList":
         dispatch({ type: "SET_MESSAGE_LIST", payload: data });
         break;
       case "call-log-list":
@@ -72,7 +72,7 @@ export const WebSocketProvider = ({ children }) => {
       case "permissions":
         dispatch({ type: "SET_GRANTED_PERMISSIONS", payload: data });
         break;
-      case "downloadProsess":
+      case "auto-downloads":
         dispatch({ type: "SET_AUTO_DOWNLOADS", payload: data });
         break;
       case "notifications":
@@ -93,6 +93,8 @@ export const WebSocketProvider = ({ children }) => {
 // Utility function to send a message through the WebSocket
 export function sendWebSocketMessage(socket, data) {
   if (socket && socket.readyState === WebSocket.OPEN) {
+    console.log(1);
+
     socket.send(JSON.stringify(data));
   } else {
     console.warn("WebSocket is not open. Message not sent.", data);
