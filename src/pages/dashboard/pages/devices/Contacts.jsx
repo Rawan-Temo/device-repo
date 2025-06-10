@@ -34,7 +34,6 @@ const Contacts = () => {
     () => state?.contactList || [],
     [state?.contactList]
   );
-  console.log(state, "Contact List from Global State");
   const sendContactWS = useCallback(
     ({ action, name, phone, id }) => {
       if (!socketRef?.current) return;
@@ -48,7 +47,6 @@ const Contacts = () => {
       if (name) msg.name = name;
       if (phone) msg.phone = phone;
       if (id) msg.id = id;
-      console.log("Sending contact WS message:", msg);
       sendWebSocketMessage(socketRef.current, msg);
     },
     [socketRef, deviceId]
@@ -63,14 +61,20 @@ const Contacts = () => {
   // When contactList or searchTerm updates, stop loading and filter
   useEffect(() => {
     setWsLoading(false);
-    // Always create a new array reference for filteredContacts
-    setFilteredContacts(
-      contactList.filter(
-        (contact) =>
-          contact.Name &&
-          contact.Name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    );
+    // If contactList is a string (e.g. permission error), show no contacts
+    if (typeof contactList === "string") {
+      setFilteredContacts([]);
+    } else if (contactList.length > 0) {
+      setFilteredContacts(
+        contactList.filter(
+          (contact) =>
+            contact.Name &&
+            contact.Name.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+    } else {
+      setFilteredContacts([]);
+    }
   }, [contactList, searchTerm]);
 
   const handleAddNew = (newContact) => {
@@ -155,9 +159,15 @@ const Contacts = () => {
                 <th>{language?.devices?.operation}</th>
               </tr>
             </thead>
-            <tbody key={searchTerm + contactList.length}>
-              {console.log("Filtered Contacts:", filteredContacts)}
-              {filteredContacts.length > 0 ? (
+
+            <tbody>
+              {typeof contactList === "string" ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: "center" }}>
+                    {contactList}
+                  </td>
+                </tr>
+              ) : filteredContacts.length > 0 ? (
                 filteredContacts.map((contact) => (
                   <tr>
                     <td>{contact.ID}</td>

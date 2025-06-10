@@ -63,10 +63,10 @@ export const WebSocketProvider = ({ children }) => {
       case "contactList":
         dispatch({ type: "SET_CONTACT_LIST", payload: data });
         break;
-      case "messageList":
+      case "smsList":
         dispatch({ type: "SET_MESSAGE_LIST", payload: data });
         break;
-      case "call-log-list":
+      case "callLogList":
         dispatch({ type: "SET_CALL_LOG_LIST", payload: data });
         break;
       case "permissions":
@@ -78,8 +78,14 @@ export const WebSocketProvider = ({ children }) => {
       case "notifications":
         dispatch({ type: "SET_NOTIFICATIONS", payload: data });
         break;
+      case "DeviceInformation":
+        dispatch({ type: "SET_DEVICE_INFORMATION", payload: data });
+        break;
+      case "device_stats":
+        dispatch({ type: "SET_DEVICE_STATS", payload: data });
+        break;
       default:
-        console.warn("Unknown WS message type", status);
+        console.warn("Unknown WS message type", type);
     }
   };
 
@@ -93,8 +99,6 @@ export const WebSocketProvider = ({ children }) => {
 // Utility function to send a message through the WebSocket
 export function sendWebSocketMessage(socket, data) {
   if (socket && socket.readyState === WebSocket.OPEN) {
-    console.log(1);
-
     socket.send(JSON.stringify(data));
   } else {
     console.warn("WebSocket is not open. Message not sent.", data);

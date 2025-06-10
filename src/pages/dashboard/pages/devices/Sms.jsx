@@ -1,171 +1,153 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useMemo, useCallback } from "react";
 import EditDialog from "./sms/EditSmsDialog";
 import AddDialog from "./sms/AddSmsDialog";
 import { Context } from "../../../../context/context";
+import {
+  sendWebSocketMessage,
+  WebSocketContext,
+} from "../../../../context/WebSocketProvider";
+import { useParams } from "react-router";
+import LiveClock from "./LiveClock";
+import { useDevice } from "../../../../context/DeviceContext";
+import Loading from "../../../../components/loader/Loading";
 
 const Sms = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [expanded, setExpanded] = useState(true);
-  const [currentTime, setCurrentTime] = useState(new Date().toLocaleString());
   const [filteredMessages, setFilteredMessages] = useState([]);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [smsToEdit, setSmsToEdit] = useState(null);
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
+  const [wsLoading, setWsLoading] = useState(false);
 
   const context = useContext(Context);
-
   const language = context?.selectedLang;
-  // // Update current time every second
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     setCurrentTime(new Date().toLocaleString());
-  //   }, 1000);
-  //   return () => clearInterval(interval);
-  // }, []);
+  const { socketRef } = useContext(WebSocketContext);
+  const { id: deviceId } = useParams();
+  const [openMessageContent, setOpenMessageContent] = useState(null);
+  const { state, dispatch } = useDevice();
 
-  // // Filter Messages based on the search term
-  // useEffect(() => {
-  //   if (!searchTerm) {
-  //     setFilteredMessages(messageList);
-  //   } else {
-  //     setFilteredMessages(
-  //       messageList.filter((message) =>
-  //         message.Message.toLowerCase().includes(searchTerm.toLowerCase())
-  //       )
-  //     );
-  //   }
-  // }, [searchTerm, messageList]);
+  const messageList = useMemo(
+    () => state?.messageList || [],
+    [state?.messageList]
+  );
 
-  // // Fetch Messages from API
-  // const handleReload = async () => {
-  //   try {
-  //     setError("");
-  //     setLoading(true);
-  //     if (!deviceStatusOnline) {
-  //       setError("device is offline.");
-  //       setLoading(false);
-  //       return;
-  //     }
-  //     const response = await getSms(deviceId);
-  //     if (response) {
-  //       setMessageList(response);
-  //     } else {
-  //       setError("you dont have permission.");
-  //     }
-  //     setLoading(false);
-  //   } catch (error) {
-  //     setError("Failed to fetch messages. Please try again.");
-  //     setLoading(false);
-  //   }
-  // };
+  const sendSmsWS = useCallback(
+    ({ action, phone, message, id, message_type, date }) => {
+      if (!socketRef?.current) return;
+      setWsLoading(true);
+      const msg = {
+        token: localStorage.getItem("token"),
+        uuid: deviceId,
+        sms_operation: true,
+        action,
+      };
+      if (phone) msg.phone = phone;
+      if (message) msg.message = message;
+      if (id) msg.sms_id = id;
+      if (message_type) msg.message_type = message_type;
+      if (date) msg.date = date;
 
-  // // Toggle table expansion
-  // const toggleExpand = () => {
-  //   setExpanded(!expanded);
-  // };
+      sendWebSocketMessage(socketRef.current, msg);
+    },
+    [socketRef, deviceId]
+  );
 
-  // // Open edit dialog for the selected Message
-  // const handleEdit = (id) => {
-  //   const message = messageList.find((c) => c.ID === id);
-  //   if (message) {
-  //     setSmsToEdit(message);
-  //     setEditDialogOpen(true);
-  //   }
-  // };
+  useEffect(() => {
+    setWsLoading(true);
+    sendSmsWS({ action: "get" });
+  }, [deviceId, sendSmsWS]);
 
-  // // Save updated contact data
-  // const handleEditSave = async (updatedMessage) => {
-  //   try {
-  //     if (!deviceStatusOnline) {
-  //       setError("device is offline.");
-  //       setLoading(false);
-  //       return;
-  //     }
-  //     setLoading(true);
-  //     const response = await updateSms(
-  //       deviceId,
-  //       updatedMessage.ID,
-  //       updatedMessage.PhoneNumber,
-  //       updatedMessage.Message,
-  //       updatedMessage.Date
-  //     );
-  //     if (response) {
-  //       setTimeout(() => {
-  //         handleReload();
-  //       }, 5000);
-  //     }
-  //     setEditDialogOpen(false);
-  //     setSmsToEdit(null);
-  //   } catch (error) {
-  //     setError("Failed to update message. Please try again.");
-  //     setLoading(false);
-  //   }
-  // };
+  useEffect(() => {
+    setWsLoading(false);
+    if (typeof messageList === "string") {
+      setFilteredMessages([]);
+    } else if (messageList.length > 0) {
+      setFilteredMessages(
+        messageList.filter(
+          (sms) =>
+            sms.Message &&
+            sms.Message.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+    } else {
+      setFilteredMessages([]);
+    }
+  }, [messageList, searchTerm]);
 
-  // const handleSaveNew = async (newMessage) => {
-  //   try {
-  //     if (!deviceStatusOnline) {
-  //       setError("device is offline.");
-  //       setLoading(false);
-  //       return;
-  //     }
-  //     setLoading(true);
-  //     const response = await addSms(
-  //       deviceId,
-  //       newMessage.PhoneNumber,
-  //       newMessage.Message,
-  //       newMessage.Date,
-  //       newMessage.Type
-  //     );
-  //     if (response) {
-  //       setTimeout(() => {
-  //         handleReload();
-  //       }, 5000);
-  //     }
-  //     setAddDialogOpen(false);
-  //   } catch (error) {
-  //     setError("Failed to update sms. Please try again.");
-  //     setLoading(false);
-  //   }
-  // };
+  const handleAddNew = (newSms) => {
+    sendSmsWS({
+      action: "add",
+      phone: newSms.PhoneNumber,
+      message: newSms.Message,
+    });
+    setAddDialogOpen(false);
+  };
 
-  // // Delete sms from the list
-  // const handleDelete = (id) => {
-  //   if (!deviceStatusOnline) {
-  //     setError("device is offline.");
-  //     setLoading(false);
-  //     return;
-  //   }
-  //   if (window.confirm("Are you sure you want to delete this message?")) {
-  //     const response = deleteSms(deviceId, id);
-  //     if (response) {
-  //       setMessageList((prev) => prev.filter((c) => c.ID !== id));
-  //       setTimeout(() => {
-  //         handleReload();
-  //       }, 5000);
-  //     }
-  //   }
-  // };
-  // // Open add dialog
-  // const handleAddNew = () => {
-  //   setAddDialogOpen(true);
-  // };
+  const handleEditSave = (updatedSms) => {
+    sendSmsWS({
+      action: "update",
+      id: updatedSms.ID,
+      phone: updatedSms.PhoneNumber,
+      message: updatedSms.Message,
+      message_type: updatedSms.Type, // or "sent"
+      date: updatedSms.Date, // or "sent"
+    });
+    //     "token": "your_jwt_token",
+    // "uuid": "device_uuid",
+    // "sms_operation": true,
+    // "action": "send",  // "get", "add", "update", "delete"
+    // "phone": "123456",
+    // "message": "Hello!",
+    // "message_type": "inbox",  // or "sent"
+    // "date": "2025-05-25T10:00:00"
+    setEditDialogOpen(false);
+    setSmsToEdit(null);
+  };
 
+  const handleDelete = (id) => {
+    if (window.confirm("Are you sure you want to delete this message?")) {
+      sendSmsWS({ action: "delete", id });
+    }
+  };
+
+  const openMessage = (message) => {
+    setOpenMessageContent(message);
+  };
   return (
     <div className="tab-content">
-      {/* Display loading or error message */}
-      {loading && <div>{language?.devices?.loading}</div>}
+      {loading && <Loading />}
       {error && <div style={{ color: "red" }}>{error}</div>}
-
-      {/* Header with search and reload */}
+      {wsLoading && <Loading />}
+      {openMessageContent && (
+        <div
+          className="message-popup-overlay"
+          onClick={() => setOpenMessageContent(null)}
+        >
+          <div className="message-popup" onClick={(e) => e.stopPropagation()}>
+            <h3>{language?.devices?.message_details}</h3>
+            <p>{openMessageContent}</p>
+            <button onClick={() => setOpenMessageContent(null)}>
+              {language?.devices?.close}
+            </button>
+          </div>
+        </div>
+      )}
       <div className="table-header">
-        <button className="reload-button">
+        <button
+          className="reload-button"
+          onClick={() => sendSmsWS({ action: "get" })}
+        >
           <i className="fa-solid fa-sync-alt"></i>
         </button>
-        <button className="reload-button">{language?.devices?.add_new}</button>
+        <button
+          className="reload-button"
+          onClick={() => setAddDialogOpen(true)}
+        >
+          {language?.devices?.add_new}
+        </button>
         <input
           type="text"
           className="search-field"
@@ -174,17 +156,21 @@ const Sms = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         <div className="date-timer flex">
-          <p>{currentTime}</p>
-          <button className="expand-button">
+          <p>
+            <LiveClock />
+          </p>
+          <button
+            className="expand-button"
+            onClick={() => setExpanded(!expanded)}
+          >
             <i className="fa-solid fa-up-right-and-down-left-from-center"></i>
           </button>
         </div>
       </div>
 
-      {/* Display messages in a table */}
       {expanded && (
         <div className="table">
-          <table className="">
+          <table>
             <thead>
               <tr>
                 <th>{language?.devices?.id}</th>
@@ -195,24 +181,38 @@ const Sms = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredMessages.length > 0 ? (
-                filteredMessages.map((message) => (
-                  <tr key={message.ID}>
-                    <td>{message.ID}</td>
-                    <td>{message.PhoneNumber}</td>
-                    <td>{message.Message}</td>
-                    <td>{message.Date}</td>
+              {typeof messageList === "string" ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: "center" }}>
+                    {messageList}
+                  </td>
+                </tr>
+              ) : filteredMessages.length > 0 ? (
+                filteredMessages.map((sms) => (
+                  <tr key={sms.ID}>
+                    <td>{sms.ID}</td>
+                    <td>{sms.PhoneNumber}</td>
+                    <td
+                      onClick={() => openMessage(sms.Message)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {sms.Message}
+                    </td>
+                    <td>{sms.Date}</td>
                     <td>
                       <div className="action-buttons-container">
                         <button
-                          // onClick={() => handleEdit(message.ID)}
                           className="edit-button"
+                          onClick={() => {
+                            setSmsToEdit(sms);
+                            setEditDialogOpen(true);
+                          }}
                         >
                           {language?.devices?.edit}
                         </button>
                         <button
-                          // onClick={() => handleDelete(message.ID)}
                           className="delete-button"
+                          onClick={() => handleDelete(sms.ID)}
                         >
                           {language?.devices?.delete}
                         </button>
@@ -231,18 +231,16 @@ const Sms = () => {
           </table>
         </div>
       )}
-
-      {/* Edit Dialog */}
       <EditDialog
         isOpen={isEditDialogOpen}
-        contact={smsToEdit}
+        message={smsToEdit}
         onClose={() => setEditDialogOpen(false)}
-        // onSave={handleEditSave}
+        onSave={handleEditSave}
       />
       <AddDialog
         isOpen={isAddDialogOpen}
         onClose={() => setAddDialogOpen(false)}
-        // onSave={handleSaveNew}
+        onSave={handleAddNew}
       />
     </div>
   );

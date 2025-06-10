@@ -9,4 +9,5 @@ export const initialDeviceState = {
   grantedPermissions: [],
   notificationList: [],
   downloadList: {},
+  deviceStats: {},
 };

@@ -7,14 +7,6 @@ export function deviceReducer(state, action) {
         ...initialDeviceState,
         currentDeviceId: action.payload,
       };
-    case "SET_DEVICE_INFO":
-      return {
-        ...state,
-        deviceInfo: action.payload,
-        deviceId: action.payload.uuid,
-        deviceName: action.payload.name,
-        deviceStatusOnline: action.payload.is_connected,
-      };
 
     case "SET_FILE_LIST":
       return { ...state, fileList: action.payload };
@@ -39,6 +31,10 @@ export function deviceReducer(state, action) {
 
     case "SET_MY_DEVICES":
       return { ...state, myDevices: action.payload };
+    case "SET_DEVICE_INFORMATION":
+      return { ...state, deviceInfo: action.payload };
+    case "SET_DEVICE_STATS":
+      return { ...state, deviceStats: action.payload };
 
     default:
       return state;

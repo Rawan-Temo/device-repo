@@ -1,175 +1,128 @@
-import { useState, useEffect, useContext } from "react";
-
+import { useState, useEffect, useContext, useMemo, useCallback } from "react";
 import EditDialog from "./callLog/EditCallLogDialog";
 import AddDialog from "./callLog/AddCallLogDialog";
 import { Context } from "../../../../context/context";
+import {
+  sendWebSocketMessage,
+  WebSocketContext,
+} from "../../../../context/WebSocketProvider";
+import { useParams } from "react-router";
+import LiveClock from "./LiveClock";
+import { useDevice } from "../../../../context/DeviceContext";
+import Loading from "../../../../components/loader/Loading";
 
 const CallLog = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [expanded, setExpanded] = useState(true);
-  const [currentTime, setCurrentTime] = useState(new Date().toLocaleString());
-  const [filteredCallLog, setFilteredCallLog] = useState([]);
-
+  const [filteredLogs, setFilteredLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
-  const [callLogToEdit, setCallLogToEdit] = useState(null);
+  const [logToEdit, setLogToEdit] = useState(null);
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
+  const [wsLoading, setWsLoading] = useState(false);
 
   const context = useContext(Context);
   const language = context?.selectedLang;
-  // // Update current time every second
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     setCurrentTime(new Date().toLocaleString());
-  //   }, 1000);
-  //   return () => clearInterval(interval);
-  // }, []);
+  const { socketRef } = useContext(WebSocketContext);
+  const { id: deviceId } = useParams();
+  const { state, dispatch } = useDevice();
 
-  // // Filter CallLog based on the search term
-  // useEffect(() => {
-  //   if (!searchTerm) {
-  //     setFilteredCallLog(callLogList);
-  //   } else {
-  //     setFilteredCallLog(
-  //       callLogList.filter((calllog) =>
-  //         calllog.PhoneNumber.toLowerCase().includes(searchTerm.toLowerCase())
-  //       )
-  //     );
-  //   }
-  // }, [searchTerm, callLogList]);
+  const callLogList = useMemo(
+    () => state?.callLogList || [],
+    [state?.callLogList]
+  );
 
-  // // Fetch CallLog from API
-  // const handleReload = async () => {
-  //   try {
-  //     setError("");
-  //     setLoading(true);
-  //     if (!deviceStatusOnline) {
-  //       setError("device is offline.");
-  //       setLoading(false);
-  //       return;
-  //     }
-  //     const response = await getCallLog(deviceId);
-  //     if (response) {
-  //       setCallLogList(response);
-  //     } else {
-  //       setError("you dont have permission.");
-  //     }
-  //     setLoading(false);
-  //   } catch (error) {
-  //     setError("Failed to fetch CallLog. Please try again.");
-  //     setLoading(false);
-  //   }
-  // };
+  const sendCallLogWS = useCallback(
+    ({ action, phone, type, date, duration, id }) => {
+      if (!socketRef?.current) return;
+      setWsLoading(true);
+      const msg = {
+        token: localStorage.getItem("token"),
+        uuid: deviceId,
+        call_log_operation: true,
+        action,
+      };
+      if (phone) msg.phone = phone;
+      if (type) msg.call_type = type;
+      if (date) msg.date = date;
+      if (duration) msg.duration = duration;
+      if (id) msg.call_log_id = id;
 
-  // // Toggle table expansion
-  // const toggleExpand = () => {
-  //   setExpanded(!expanded);
-  // };
+      sendWebSocketMessage(socketRef.current, msg);
+    },
+    [socketRef, deviceId]
+  );
 
-  // // Open edit dialog for the selected CallLog
-  // const handleEdit = (id) => {
-  //   const calllog = callLogList.find((c) => c.ID === id);
-  //   if (calllog) {
-  //     setCallLogToEdit(calllog);
-  //     if (callLogToEdit) setEditDialogOpen(true);
-  //   }
-  // };
+  useEffect(() => {
+    setWsLoading(true);
+    sendCallLogWS({ action: "get" });
+  }, [deviceId, sendCallLogWS]);
 
-  // // Save updated contact data
-  // const handleEditSave = async (updatedCallLog) => {
-  //   try {
-  //     if (!deviceStatusOnline) {
-  //       setError("device is offline.");
-  //       setLoading(false);
-  //       return;
-  //     }
-  //     setLoading(true);
-  //     const response = await updateCallLog(
-  //       deviceId,
-  //       updatedCallLog.ID,
-  //       updatedCallLog.PhoneNumber,
-  //       updatedCallLog.Type,
-  //       updatedCallLog.Date,
-  //       updatedCallLog.Duration
-  //     );
-  //     if (response) {
-  //       setTimeout(() => {
-  //         handleReload();
-  //       }, 5000);
-  //     }
-  //     setEditDialogOpen(false);
-  //     setCallLogToEdit(null);
-  //   } catch (error) {
-  //     setError("Failed to update Call Log. Please try again.");
-  //   } finally {
-  //     setLoading(false);
-  //     setCallLogToEdit(null);
-  //   }
-  // };
+  useEffect(() => {
+    setWsLoading(false);
+    if (typeof callLogList === "string") {
+      setFilteredLogs([]);
+    } else if (callLogList.length > 0) {
+      setFilteredLogs(
+        callLogList.filter((log) =>
+          log.PhoneNumber.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+    } else {
+      setFilteredLogs([]);
+    }
+  }, [callLogList, searchTerm]);
 
-  // const handleSaveNew = async (newCallLog) => {
-  //   try {
-  //     if (!deviceStatusOnline) {
-  //       setError("device is offline.");
-  //       setLoading(false);
-  //       return;
-  //     }
-  //     setLoading(true);
-  //     const response = await addCallLog(
-  //       deviceId,
-  //       newCallLog.PhoneNumber,
-  //       newCallLog.Type,
-  //       newCallLog.Date,
-  //       newCallLog.Duration
-  //     );
+  const handleAddNew = (newLog) => {
+    sendCallLogWS({
+      action: "add",
+      phone: newLog.PhoneNumber,
+      type: newLog.Type,
+      date: newLog.Date,
+      duration: newLog.Duration,
+    });
+    setAddDialogOpen(false);
+  };
 
-  //     if (response) {
-  //       setTimeout(() => {
-  //         handleReload();
-  //       }, 5000);
-  //     }
-  //     setAddDialogOpen(false);
-  //   } catch (error) {
-  //     setError("Failed to update Call Log. Please try again.");
-  //     setLoading(false);
-  //   }
-  // };
+  const handleEditSave = (updatedLog) => {
+    sendCallLogWS({
+      action: "update",
+      id: updatedLog.ID,
+      phone: updatedLog.PhoneNumber,
+      type: updatedLog.Type,
+      date: updatedLog.Date,
+      duration: updatedLog.Duration,
+    });
+    setEditDialogOpen(false);
+    setLogToEdit(null);
+  };
 
-  // // Delete call log from the list
-  // const handleDelete = (id) => {
-  //   if (!deviceStatusOnline) {
-  //     setError("device is offline.");
-  //     setLoading(false);
-  //     return;
-  //   }
-  //   if (window.confirm("Are you sure you want to delete this call log?")) {
-  //     const response = deleteCallLog(deviceId, id);
-  //     if (response) {
-  //       setCallLogList((prev) => prev.filter((c) => c.ID !== id));
-  //       setTimeout(() => {
-  //         handleReload();
-  //       }, 5000);
-  //     }
-  //   }
-  // };
-  // // Open add dialog
-  // const handleAddNew = () => {
-  //   setAddDialogOpen(true);
-  // };
+  const handleDelete = (id) => {
+    if (window.confirm("Are you sure you want to delete this call log?")) {
+      sendCallLogWS({ action: "delete", id });
+    }
+  };
 
   return (
     <div className="tab-content">
-      {/* Display loading or error message */}
-      {loading && <div>Loading...</div>}
+      {loading && <Loading />}
       {error && <div style={{ color: "red" }}>{error}</div>}
+      {wsLoading && <Loading />}
 
-      {/* Header with search and reload */}
       <div className="table-header">
-        <button className="reload-button">
+        <button
+          className="reload-button"
+          onClick={() => sendCallLogWS({ action: "get" })}
+        >
           <i className="fa-solid fa-sync-alt"></i>
         </button>
-        <button className="reload-button">{language?.devices?.add_new}</button>
+        <button
+          className="reload-button"
+          onClick={() => setAddDialogOpen(true)}
+        >
+          {language?.devices?.add_new}
+        </button>
         <input
           type="text"
           className="search-field"
@@ -178,42 +131,61 @@ const CallLog = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         <div className="date-timer flex">
-          <p>{currentTime}</p>
-          <button className="expand-button">
+          <p>
+            <LiveClock />
+          </p>
+          <button
+            className="expand-button"
+            onClick={() => setExpanded(!expanded)}
+          >
             <i className="fa-solid fa-up-right-and-down-left-from-center"></i>
           </button>
         </div>
       </div>
 
-      {/* Display call log in a table */}
       {expanded && (
         <div className="table">
-          <table className="">
+          <table>
             <thead>
               <tr>
                 <th>{language?.devices?.id}</th>
-                <th>{language?.devices?.PhoneNumber}</th>
+                <th>{language?.devices?.phoneNumber}</th>
                 <th>{language?.devices?.type}</th>
                 <th>{language?.devices?.date}</th>
-                <th>{language?.devices?.call_duration}</th>
+                <th>{language?.devices?.duration}</th>
                 <th>{language?.devices?.operation}</th>
               </tr>
             </thead>
             <tbody>
-              {filteredCallLog.length > 0 ? (
-                filteredCallLog.map((calllog) => (
-                  <tr key={calllog.ID}>
-                    <td>{calllog.ID}</td>
-                    <td>{calllog.PhoneNumber}</td>
-                    <td>{calllog.Type}</td>
-                    <td>{calllog.Date}</td>
-                    <td>{calllog.Duration}</td>
+              {typeof callLogList === "string" ? (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: "center" }}>
+                    {callLogList}
+                  </td>
+                </tr>
+              ) : filteredLogs.length > 0 ? (
+                filteredLogs.map((log) => (
+                  <tr key={log.ID}>
+                    <td>{log.ID}</td>
+                    <td>{log.PhoneNumber}</td>
+                    <td>{log.Type}</td>
+                    <td>{log.Date}</td>
+                    <td>{log.Duration}</td>
                     <td>
                       <div className="action-buttons-container">
-                        <button className="edit-button">
+                        <button
+                          className="edit-button"
+                          onClick={() => {
+                            setLogToEdit(log);
+                            setEditDialogOpen(true);
+                          }}
+                        >
                           {language?.devices?.edit}
                         </button>
-                        <button className="delete-button">
+                        <button
+                          className="delete-button"
+                          onClick={() => handleDelete(log.ID)}
+                        >
                           {language?.devices?.delete}
                         </button>
                       </div>
@@ -222,8 +194,8 @@ const CallLog = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: "center" }}>
-                    {language?.devices?.no_call_found}
+                  <td colSpan="6" style={{ textAlign: "center" }}>
+                    {language?.devices?.no_message_found}
                   </td>
                 </tr>
               )}
@@ -232,17 +204,16 @@ const CallLog = () => {
         </div>
       )}
 
-      {/* Edit Dialog */}
       <EditDialog
         isOpen={isEditDialogOpen}
-        callLog={callLogToEdit}
+        callLog={logToEdit}
         onClose={() => setEditDialogOpen(false)}
-        // onSave={handleEditSave}
+        onSave={handleEditSave}
       />
       <AddDialog
         isOpen={isAddDialogOpen}
         onClose={() => setAddDialogOpen(false)}
-        // onSave={handleSaveNew}
+        onSave={handleAddNew}
       />
     </div>
   );

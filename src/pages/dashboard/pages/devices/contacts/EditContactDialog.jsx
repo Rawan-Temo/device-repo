@@ -33,7 +33,7 @@ const EditDialog = ({ isOpen, contact, onClose, onSave }) => {
         <div className="form-group">
           <label>{language?.devices?.phoneNumber}</label>
           <input
-            type="number"
+            type="text"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />

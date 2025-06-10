@@ -1,8 +1,10 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Context } from "../../../context/context";
 import { host, http } from "../../../serverConfig.json";
 import axios from "axios";
 import Loading from "../../../components/loader/Loading";
+import { WebSocketContext } from "../../../context/WebSocketProvider";
+import { useDevice } from "../../../context/DeviceContext";
 
 function Overview() {
   const [loading, setLoading] = useState(true);
@@ -11,16 +13,43 @@ function Overview() {
   const [downloads, setDownloads] = useState([]);
   const context = useContext(Context);
   const language = context?.selectedLang;
+  const { socketRef } = useContext(WebSocketContext);
+  const { state, dispatch } = useDevice();
+  const [stats, setStats] = useState({
+    online: 0,
+    total: 0,
+  });
+
+  console.log(state);
+  const permissionslist = useMemo(() => {
+    try {
+      setStats(state.deviceStats);
+    } catch (error) {
+      console.log(" ");
+    }
+  }, [state.deviceStats]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${http}/devices`);
-        const dowload = await axios.get(`${http}/downloads/all`);
+        const response = await axios.get(`${http}/api/devices`, {
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+        });
+        console.log(response);
+        // const dowload = await axios.get(
+        //   `http://192.168.1.157:7000/ServerApp/api/downloads/all`,
+        //   {
+        //     headers: {
+        //       Authorization: "Bearer " + localStorage.getItem("token"),
+        //     },
+        //   }
+        // );
 
-        setDownloads(dowload.data);
+        // setDownloads(dowload.data);
+
         const devices = response.data;
-        console.log("Downloads:", devices);
         setAllDevices(devices);
         const activeDevice = devices.filter(
           (device) => device.is_connected === true
@@ -48,12 +77,12 @@ function Overview() {
           <div className="overview-item">
             <i className="fa-solid fa-laptop"></i>
             <h3>{language?.overview?.devices_total}</h3>
-            <p>{allDevices?.length}</p>
+            <p>{stats.total || "0"}</p>
           </div>
           <div className="overview-item">
             <i className="fa-solid fa-wifi"></i>
             <h3>{language?.overview?.active_now}</h3>
-            <p>{activeDevices?.length}</p>
+            <p>{stats.online || "0"}</p>
           </div>
           <div className="overview-item">
             <i className="fa-solid fa-download"></i>

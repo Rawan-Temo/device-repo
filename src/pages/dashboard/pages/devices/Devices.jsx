@@ -64,7 +64,7 @@ const DeviceList = ({ activeTab }) => {
             <h3 className="chat-name">{device.name}</h3>
             <h3 className="chat-name">{device.last_seen}</h3>
           </div>
-          <div className="granted-permissions icons">
+          <div className="granted-permissions">
             {iconMap.map(({ permission, icon }) =>
               device.granted_permission?.[permission] ? (
                 <i

@@ -12,6 +12,7 @@ const Provider = ({ children }) => {
     localStorage.getItem("language") || userLang || "EN"
   );
   const [selectedLang, setSelectedLang] = useState({});
+  const [profile, setProfile] = useState({});
 
   useEffect(() => {
     localStorage.setItem("isDark", mode ? 1 : 0);
@@ -58,7 +59,7 @@ const Provider = ({ children }) => {
   // useEffect(() => {
   //   if (!userInfo.access) {
   //     refreshToken();
-  //   } 
+  //   }
   // }, [userInfo.access]);
 
   return (
@@ -71,6 +72,8 @@ const Provider = ({ children }) => {
         selectedLang,
         userInfo,
         setUserInfo,
+        profile,
+        setProfile,
       }}
     >
       {children}

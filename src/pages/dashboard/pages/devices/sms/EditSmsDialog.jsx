@@ -6,7 +6,7 @@ const EditDialog = ({ isOpen, message, onClose, onSave }) => {
   const [phoneNumber, setPhoneNumber] = useState();
   const [messageBody, setMessageBody] = useState();
   const [messageDate, setMessageDate] = useState();
-
+  const [messageType, setMessageType] = useState("Inbox"); // Default to Inbox
   useEffect(() => {
     setPhoneNumber(message?.PhoneNumber || "");
     setMessageBody(message?.Message || "");
@@ -19,6 +19,7 @@ const EditDialog = ({ isOpen, message, onClose, onSave }) => {
       PhoneNumber: phoneNumber,
       Message: messageBody,
       Date: messageDate,
+      Type: messageType, // Add message type to the saved data
     });
   };
   const context = useContext(Context);
@@ -39,11 +40,24 @@ const EditDialog = ({ isOpen, message, onClose, onSave }) => {
         </div>
         <div className="form-group">
           <label>{language?.devices?.message}</label>
-          <input
+          <textarea
+            rows={10}
+            style={{ fontSize: "20px" }}
             type="text"
             value={messageBody}
             onChange={(e) => setMessageBody(e.target.value)}
           />
+        </div>
+        <div className="form-group">
+          <label>message type</label>
+          <select
+            value={messageType}
+            onChange={(e) => setMessageType(e.target.value)}
+            className="message-type-select"
+          >
+            <option value="Inbox">Inbox</option>
+            <option value="Sent">Sent</option>
+          </select>
         </div>
         <div className="form-group">
           <label>{language?.devices?.date}</label>
@@ -58,10 +72,10 @@ const EditDialog = ({ isOpen, message, onClose, onSave }) => {
 
         <div className="dialog-buttons">
           <button onClick={onClose} className="reload-button">
-          {language?.devices?.cancel}
+            {language?.devices?.cancel}
           </button>
           <button onClick={handleSave} className="reload-button">
-          {language?.devices?.save}
+            {language?.devices?.save}
           </button>
         </div>
       </div>

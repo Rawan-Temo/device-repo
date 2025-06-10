@@ -44,7 +44,6 @@ const PermissionsTable = () => {
     const device = state?.myDevices?.find((device) => device.uuid === id);
     const permission = device?.granted_permission || null;
 
-    console.log("Permissions:", permission);
     setGrantedPermissions(permission);
   }, [id, state?.myDevices]);
   // const handleReload = async () => {
@@ -127,13 +126,7 @@ const PermissionsTable = () => {
       setLoading(true);
       // Send WebSocket message to request permission
       if (socketRef?.current) {
-        console.log({
-          token: localStorage.getItem("token"),
-          uuid: id,
-          permission_operation: true,
-          caller: newRequest.callerName,
-          type: selectedPermission,
-        });
+        
         sendWS( {
           token: localStorage.getItem("token"),
           uuid: id,

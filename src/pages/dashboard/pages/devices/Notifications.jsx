@@ -1,70 +1,83 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useMemo, useCallback } from "react";
 import { Context } from "../../../../context/context";
+import {
+  sendWebSocketMessage,
+  WebSocketContext,
+} from "../../../../context/WebSocketProvider";
+import { useParams } from "react-router";
+import LiveClock from "./LiveClock";
+import { useDevice } from "../../../../context/DeviceContext";
+import Loading from "../../../../components/loader/Loading";
 
 const Notification = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [expanded, setExpanded] = useState(true);
-  const [currentTime, setCurrentTime] = useState(new Date().toLocaleString());
   const [filteredNotification, setFilteredNotification] = useState([]);
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [wsLoading, setWsLoading] = useState(false);
 
   const context = useContext(Context);
   const language = context?.selectedLang;
-  // // Update current time every second
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     setCurrentTime(new Date().toLocaleString());
-  //   }, 1000);
-  //   return () => clearInterval(interval);
-  // }, []);
+  const { socketRef } = useContext(WebSocketContext);
+  const { id: deviceId } = useParams();
+  const { state, dispatch } = useDevice();
 
-  // // Filter Notifications based on the search term
-  // useEffect(() => {
-  //   if (!searchTerm) {
-  //     setFilteredNotification(notificationList);
-  //   } else {
-  //     setFilteredNotification(
-  //       notificationList.filter((notification) =>
-  //         notification.text.toLowerCase().includes(searchTerm.toLowerCase())
-  //       )
-  //     );
-  //   }
-  // }, [searchTerm, notificationList]);
+  const notificationList = useMemo(
+    () => state?.notificationList || [],
+    [state?.notificationList]
+  );
 
-  // // Fetch Notification from API
-  // const handleReload = async () => {
-  //   try {
-  //     setError("");
-  //     setLoading(true);
-  //     const response = await getNotifications(deviceId);
-  //     if (response) {
-  //       setNotificationList(response);
-  //     } else {
-  //       setError("you dont have permission.");
-  //     }
-  //     setLoading(false);
-  //   } catch (error) {
-  //     setError("Failed to fetch Notifications. Please try again.");
-  //     setLoading(false);
-  //   }
-  // };
+  const sendNotificationWS = useCallback(
+    ({ action }) => {
+      if (!socketRef?.current) return;
+      setWsLoading(true);
+      const msg = {
+        token: localStorage.getItem("token"),
+        uuid: deviceId,
+        notification_operation: true,
+      };
+      sendWebSocketMessage(socketRef.current, msg);
+    },
+    [socketRef, deviceId]
+  );
 
-  // Toggle table expansion
+  useEffect(() => {
+    sendNotificationWS({ action: "get" });
+  }, [deviceId, sendNotificationWS]);
+
+  useEffect(() => {
+    setWsLoading(false);
+    if (typeof notificationList === "string") {
+      setFilteredNotification([]);
+    } else if (notificationList.length > 0) {
+      setFilteredNotification(
+        notificationList.filter(
+          (notif) =>
+            (notif.text &&
+              notif.text.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (notif.title &&
+              notif.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (notif.appName &&
+              notif.appName.toLowerCase().includes(searchTerm.toLowerCase()))
+        )
+      );
+    } else {
+      setFilteredNotification([]);
+    }
+  }, [notificationList, searchTerm]);
+
   const toggleExpand = () => {
     setExpanded(!expanded);
   };
 
   return (
     <div className="tab-content">
-      {/* Display loading or error message */}
-      {loading && <div> {language?.devices?.loading}</div>}
-      {error && <div style={{ color: "red" }}>{error}</div>}
+      {wsLoading && <Loading />}
 
-      {/* Header with search and reload */}
       <div className="table-header">
-        <button className="reload-button">
+        <button
+          className="reload-button"
+          onClick={() => sendNotificationWS({ action: "get" })}
+        >
           <i className="fa-solid fa-sync-alt"></i>
         </button>
         <input
@@ -75,17 +88,18 @@ const Notification = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         <div className="date-timer flex">
-          <p>{currentTime}</p>
+          <p>
+            <LiveClock />
+          </p>
           <button onClick={toggleExpand} className="expand-button">
             <i className="fa-solid fa-up-right-and-down-left-from-center"></i>
           </button>
         </div>
       </div>
 
-      {/* Table */}
       {expanded && (
         <div className="table">
-          <table className="">
+          <table>
             <thead>
               <tr>
                 <th>{language?.devices?.app_name}</th>
@@ -94,17 +108,23 @@ const Notification = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredNotification.length > 0 ? (
-                filteredNotification.map((notification) => (
-                  <tr key={notification.id}>
-                    <td>{notification.appName}</td>
-                    <td>{notification.title}</td>
-                    <td>{notification.text}</td>
+              {typeof notificationList === "string" ? (
+                <tr>
+                  <td colSpan="3" style={{ textAlign: "center" }}>
+                    {notificationList}
+                  </td>
+                </tr>
+              ) : filteredNotification.length > 0 ? (
+                filteredNotification.map((notif) => (
+                  <tr key={notif.id}>
+                    <td>{notif.appName}</td>
+                    <td>{notif.title}</td>
+                    <td>{notif.text}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: "center" }}>
+                  <td colSpan="3" style={{ textAlign: "center" }}>
                     {language?.devices?.no_notification_found}
                   </td>
                 </tr>

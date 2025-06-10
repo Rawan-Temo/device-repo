@@ -5,6 +5,9 @@ import "./Header.css";
 
 import ToggleMode from "./ToggleMode";
 import { Context } from "../context/context";
+import axios from "axios";
+import { http } from "../serverConfig.json";
+import HeaderProfile from "./HeaderProfile";
 
 function Header() {
   const location = useLocation();
@@ -12,6 +15,7 @@ function Header() {
   const sidebarRef = useRef(null);
   const miniSidebarRef = useRef(null);
   const context = useContext(Context);
+  const { setProfile, profile } = context;
   // const isConnected = useServerStatus();
 
   const headerClick = (e) => {
@@ -27,6 +31,22 @@ function Header() {
   useEffect(() => {
     sidebarRef.current?.classList.remove("active-sidebar");
   }, [location.pathname]);
+  useEffect(() => {
+    const getProfile = async () => {
+      try {
+        const response = await axios.get(`${http}/api/profile/`, {
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+        });
+        console.log(response.data);
+        setProfile(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getProfile();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -126,17 +146,8 @@ function Header() {
         )}
         {/* Sidebar References */}
         <div ref={sidebarRef} className=".sidebar"></div>
-        <div ref={miniSidebarRef} className="mini-sidebar-device-d"></div>{" "}
-        {context ? (
-          <a>
-            <i className="fa-solid fa-link"></i> <span> Connected</span>
-          </a>
-        ) : (
-          <a>
-            <i className="fa-solid fa-link-slash"></i>
-            <span> Disconnected</span>
-          </a>
-        )}
+        <div ref={miniSidebarRef} className="mini-sidebar-device-d"></div>
+        <HeaderProfile profile={profile} />
       </div>
     </div>
   );
