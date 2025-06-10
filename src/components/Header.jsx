@@ -39,7 +39,6 @@ function Header() {
             Authorization: "Bearer " + localStorage.getItem("token"),
           },
         });
-        console.log(response.data);
         setProfile(response.data);
       } catch (error) {
         console.log(error);

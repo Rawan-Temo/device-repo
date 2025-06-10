@@ -99,7 +99,7 @@ const PermissionsTable = () => {
         };
       });
     } catch (error) {
-      console.log(" ");
+      console.log(error);
     }
   }, [grantedPermissions]);
   useEffect(() => {
@@ -126,8 +126,7 @@ const PermissionsTable = () => {
       setLoading(true);
       // Send WebSocket message to request permission
       if (socketRef?.current) {
-        
-        sendWS( {
+        sendWS({
           token: localStorage.getItem("token"),
           uuid: id,
           permission_operation: true,

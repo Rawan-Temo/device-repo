@@ -20,12 +20,11 @@ function Overview() {
     total: 0,
   });
 
-  console.log(state);
   const permissionslist = useMemo(() => {
     try {
       setStats(state.deviceStats);
     } catch (error) {
-      console.log(" ");
+      console.log(error);
     }
   }, [state.deviceStats]);
 
@@ -37,17 +36,7 @@ function Overview() {
             Authorization: "Bearer " + localStorage.getItem("token"),
           },
         });
-        console.log(response);
-        // const dowload = await axios.get(
-        //   `http://192.168.1.157:7000/ServerApp/api/downloads/all`,
-        //   {
-        //     headers: {
-        //       Authorization: "Bearer " + localStorage.getItem("token"),
-        //     },
-        //   }
-        // );
-
-        // setDownloads(dowload.data);
+        
 
         const devices = response.data;
         setAllDevices(devices);

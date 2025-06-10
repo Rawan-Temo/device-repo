@@ -16,7 +16,6 @@ export const WebSocketProvider = ({ children }) => {
     socketRef.current = new WebSocket(host);
 
     socketRef.current.onopen = () => {
-      console.log("WebSocket connected");
       // Send a JSON message with a random id and the token every 5 seconds
       const sendPing = () => {
         const message = JSON.stringify({
@@ -32,7 +31,6 @@ export const WebSocketProvider = ({ children }) => {
     socketRef.current.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
-        console.log("WS message received", message);
         handleWSMessage(message);
       } catch (error) {
         console.error("WS parse error", error);
