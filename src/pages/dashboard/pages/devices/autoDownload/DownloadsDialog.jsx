@@ -77,6 +77,14 @@ const DownloadsDoalog = ({ isOpen, id, onClose }) => {
   if (!isOpen) return null;
   const onStopDownload = (path) => {
     if (socketRef?.current) {
+      console.log({
+        token: localStorage.getItem("token"),
+        uuid: id,
+        file_operation: true,
+        action: "cancel", // "move", "copy", "delete_file", "delete_folder", "download"
+        path: `${path}`,
+        dest: `${path}`, // if needed
+      });
       socketRef.current.send(
         JSON.stringify({
           token: localStorage.getItem("token"),
@@ -84,9 +92,10 @@ const DownloadsDoalog = ({ isOpen, id, onClose }) => {
           file_operation: true,
           action: "cancel", // "move", "copy", "delete_file", "delete_folder", "download"
           path: `${path}`,
-          dest: `${path}`, // if needed
+          dest: `/sdcard`, // if needed
         })
       );
+      console.log("WebSocket message sent to stop download for path:", path);
     } else {
       console.warn("WebSocket is not available.");
     }
