@@ -28,7 +28,7 @@ import { WebSocketProvider } from "../../context/WebSocketProvider";
 function Dashboard() {
   return (
     <div className="dashboard-container">
-      {/* <ParticalBackground /> */}
+      <ParticalBackground />
       <DeviceProvider>
         <WebSocketProvider>
           <Sidebar />

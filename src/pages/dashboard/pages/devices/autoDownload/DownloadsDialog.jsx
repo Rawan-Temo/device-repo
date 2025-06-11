@@ -23,6 +23,11 @@ const DownloadsDoalog = ({ isOpen, id, onClose }) => {
 
   useEffect(() => {
     // Send a WebSocket message to get the initial downloads list when dialog opens
+    console.log("Opening Downloads Dialog for device:", {
+      token: localStorage.getItem("token"),
+      uuid: id,
+      get_download_list: true,
+    });
     if (isOpen && socketRef?.current) {
       socketRef.current.send(
         JSON.stringify({
@@ -31,6 +36,7 @@ const DownloadsDoalog = ({ isOpen, id, onClose }) => {
           get_download_list: true,
         })
       );
+      console.log("WebSocket message sent to get downloads list.");
     }
   }, [isOpen, id, socketRef]);
 

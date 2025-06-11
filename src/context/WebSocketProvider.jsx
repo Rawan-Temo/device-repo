@@ -68,7 +68,7 @@ export const WebSocketProvider = ({ children }) => {
       case "callLogList":
         dispatch({ type: "SET_CALL_LOG_LIST", payload: data });
         break;
-      case "permissions":
+      case "permissionList":
         dispatch({ type: "SET_GRANTED_PERMISSIONS", payload: data });
         break;
       case "downloadProsess":
