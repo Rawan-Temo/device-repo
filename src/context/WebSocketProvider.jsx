@@ -31,6 +31,7 @@ export const WebSocketProvider = ({ children }) => {
     socketRef.current.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
+        console.log(message);
         handleWSMessage(message);
       } catch (error) {
         console.error("WS parse error", error);
@@ -70,7 +71,7 @@ export const WebSocketProvider = ({ children }) => {
       case "permissions":
         dispatch({ type: "SET_GRANTED_PERMISSIONS", payload: data });
         break;
-      case "auto-downloads":
+      case "downloadProsess":
         dispatch({ type: "SET_AUTO_DOWNLOADS", payload: data });
         break;
       case "notifications":

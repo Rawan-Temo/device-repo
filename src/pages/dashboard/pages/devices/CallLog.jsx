@@ -55,6 +55,7 @@ const CallLog = () => {
   );
 
   useEffect(() => {
+    dispatch({ type: "SET_CALL_LOG_LIST", payload: [] });
     setWsLoading(true);
     sendCallLogWS({ action: "get" });
   }, [deviceId, sendCallLogWS]);
@@ -106,9 +107,7 @@ const CallLog = () => {
 
   return (
     <div className="tab-content">
-      {loading && <Loading />}
       {error && <div style={{ color: "red" }}>{error}</div>}
-      {wsLoading && <Loading />}
 
       <div className="table-header">
         <button
@@ -161,6 +160,12 @@ const CallLog = () => {
                 <tr>
                   <td colSpan="6" style={{ textAlign: "center" }}>
                     {callLogList}
+                  </td>
+                </tr>
+              ) : wsLoading ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: "center" }}>
+                    Loading...
                   </td>
                 </tr>
               ) : filteredLogs.length > 0 ? (

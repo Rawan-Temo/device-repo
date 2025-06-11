@@ -41,6 +41,7 @@ const Notification = () => {
   );
 
   useEffect(() => {
+    dispatch({ type: "SET_NOTIFICATIONS", payload: [] });
     sendNotificationWS({ action: "get" });
   }, [deviceId, sendNotificationWS]);
 
@@ -71,8 +72,6 @@ const Notification = () => {
 
   return (
     <div className="tab-content">
-      {wsLoading && <Loading />}
-
       <div className="table-header">
         <button
           className="reload-button"
@@ -112,6 +111,12 @@ const Notification = () => {
                 <tr>
                   <td colSpan="3" style={{ textAlign: "center" }}>
                     {notificationList}
+                  </td>
+                </tr>
+              ) : wsLoading ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: "center" }}>
+                    Loading...
                   </td>
                 </tr>
               ) : filteredNotification.length > 0 ? (

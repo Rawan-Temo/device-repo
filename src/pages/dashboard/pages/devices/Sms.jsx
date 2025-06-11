@@ -56,6 +56,7 @@ const Sms = () => {
   );
 
   useEffect(() => {
+    dispatch({ type: "SET_MESSAGE_LIST", payload: [] });
     setWsLoading(true);
     sendSmsWS({ action: "get" });
   }, [deviceId, sendSmsWS]);
@@ -118,9 +119,8 @@ const Sms = () => {
   };
   return (
     <div className="tab-content">
-      {loading && <Loading />}
       {error && <div style={{ color: "red" }}>{error}</div>}
-      {wsLoading && <Loading />}
+
       {openMessageContent && (
         <div
           className="message-popup-overlay"
@@ -185,6 +185,12 @@ const Sms = () => {
                 <tr>
                   <td colSpan="5" style={{ textAlign: "center" }}>
                     {messageList}
+                  </td>
+                </tr>
+              ) : wsLoading ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: "center" }}>
+                    Loading...
                   </td>
                 </tr>
               ) : filteredMessages.length > 0 ? (

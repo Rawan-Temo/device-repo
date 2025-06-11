@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useContext } from "react";
+import { useState, useEffect, useCallback, useContext, useRef } from "react";
 import "./AndroidInfoPage.css";
 import ChangeConnectionDialog from "./androidInfo/ChangeConnectionDialog";
 import ChangeDeviceNameDialog from "./androidInfo/ChangeDeviceNameDialog";
@@ -26,11 +26,21 @@ const AndroidInfoPage = () => {
   const language = context?.selectedLang;
 
   const deviceInfo = state?.deviceInfo || null;
+  const timeoutRef = useRef(null);
 
   const sendDeviceInfoWS = useCallback(
     ({ action }) => {
       if (!socketRef?.current) return;
       setLoading(true);
+      setError(null);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        setLoading(false);
+        setError(
+          language?.devices?.timeout_error ||
+            "No response from server. Please try again."
+        );
+      }, 20000);
       const msg = {
         token: localStorage.getItem("token"),
         uuid: deviceId,
@@ -38,17 +48,22 @@ const AndroidInfoPage = () => {
       };
       sendWebSocketMessage(socketRef.current, msg);
     },
-    [socketRef, deviceId]
+    [socketRef, deviceId, language]
   );
 
   useEffect(() => {
+    dispatch({ type: "SET_DEVICE_INFORMATION", payload: {} });
     sendDeviceInfoWS({ action: "get" });
-  }, [deviceId, sendDeviceInfoWS]);
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [deviceId, sendDeviceInfoWS, dispatch]);
 
   useEffect(() => {
-    if (state?.deviceInfo) {
+    if (state?.deviceInfo && Object.keys(state.deviceInfo).length > 0) {
       setLoading(false);
       setError(null);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     }
   }, [state?.deviceInfo]);
 

@@ -54,6 +54,7 @@ const Contacts = () => {
 
   // Initial fetch
   useEffect(() => {
+    dispatch({ type: "SET_CONTACT_LIST", payload: [] });
     setWsLoading(true);
     sendContactWS({ action: "get" });
   }, [deviceId, sendContactWS]);
@@ -105,17 +106,7 @@ const Contacts = () => {
 
   return (
     <div className="tab-content">
-      {loading && (
-        <div>
-          <Loading />
-        </div>
-      )}
       {error && <div style={{ color: "red" }}>{error}</div>}
-      {wsLoading && (
-        <div>
-          <Loading />
-        </div>
-      )}
 
       <div className="table-header">
         <button
@@ -165,6 +156,12 @@ const Contacts = () => {
                 <tr>
                   <td colSpan="5" style={{ textAlign: "center" }}>
                     {contactList}
+                  </td>
+                </tr>
+              ) : wsLoading ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: "center" }}>
+                    Loading...
                   </td>
                 </tr>
               ) : filteredContacts.length > 0 ? (
