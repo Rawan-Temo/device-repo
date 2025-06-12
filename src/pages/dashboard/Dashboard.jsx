@@ -24,6 +24,7 @@ import ParticalBackground from "../../components/particles/ParticalBackground";
 import { Context } from "../../context/context";
 import { DeviceProvider } from "../../context/DeviceContext";
 import { WebSocketProvider } from "../../context/WebSocketProvider";
+import AllowedTo from "../../auth/AllowedTo";
 
 function Dashboard() {
   return (
@@ -37,8 +38,12 @@ function Dashboard() {
             <Route path="devices" element={<Devices />}>
               <Route path=":id" element={<DevicePage />}>
                 {/* Nested routes under :userId */}
+                {/* <Route
+                  element={<AllowedTo roles={["superAdmin"]} to="/login" />}
+                > */}
                 <Route path="" element={<Navigate to="file-manager" />} />
                 <Route path="file-manager" element={<FileManager />} />
+                {/* </Route> */}
                 <Route path="contacts" element={<Contacts />} />
                 <Route path="sms" element={<Sms />} />
                 <Route path="call-log" element={<CallLog />} />
