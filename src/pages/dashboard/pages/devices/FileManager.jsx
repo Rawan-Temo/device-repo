@@ -11,6 +11,7 @@ import {
   WebSocketContext,
 } from "../../../../context/WebSocketProvider";
 import { useDevice } from "../../../../context/DeviceContext";
+import FilePreviewComponent from "./fileManager/FilePreviewComponent";
 
 const FileManager = () => {
   const [error, setError] = useState(null);
@@ -22,12 +23,14 @@ const FileManager = () => {
   const [fileList, setFiles] = useState([
     { name: "sdcard", isDirectory: true, path: "/sdcard" },
   ]);
+  const [filePreview, setFilePreview] = useState(null);
+  const [isFilePreviewOpen, setIsFilePreviewOpen] = useState(false);
   const context = useContext(Context);
   const language = context?.selectedLang;
 
   const { state, dispatch } = useDevice();
   const { socketRef } = useContext(WebSocketContext);
-
+  const [popupOpen, setPopupOpen] = useState(false);
   const sendWsMessage = (message) => {
     if (socketRef.current && socketRef.current.readyState === 1) {
       socketRef.current.send(JSON.stringify(message));
@@ -49,6 +52,7 @@ const FileManager = () => {
     }
   };
   useEffect(() => {
+    dispatch({ type: "SET_FILE_LIST", payload: [] });
     sendWS({
       token: localStorage.getItem("token"),
       uuid: id,
@@ -56,19 +60,15 @@ const FileManager = () => {
       action: "list", // "move", "copy", "delete_file", "delete_folder", "download"
       path: "/sdcard/",
     });
-    // Wait 2 seconds, then refresh the page
-    const timeout = setTimeout(() => {
-      handleRefresh();
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, [id, folderPath]);
+  }, [id]);
 
   useEffect(() => {
     // Wait for fileList to arrive before showing file manager
     if (
       state.fileList &&
       Array.isArray(state.fileList) &&
-      state.fileList.length > 0
+      state.fileList.length > 0 &&
+      state.fileList[0]?.uuid === id
     ) {
       const fileDetails = state?.fileList;
       setFiles((prevFiles) => [
@@ -85,6 +85,11 @@ const FileManager = () => {
   const handleOpen = (file, forceRefresh = false) => {
     setFolderPath(file.path);
 
+    if (!file.isDirectory) {
+      setFilePreview(file);
+      setIsFilePreviewOpen(true);
+      setPopupOpen(true);
+    }
     if (socketRef?.current && socketRef.current.readyState === 1) {
       socketRef.current.send(
         JSON.stringify({
@@ -172,7 +177,7 @@ const FileManager = () => {
   };
   const handleRefresh = async () => {
     setFiles([{ name: "sdcard", isDirectory: true, path: "/sdcard" }]);
-    await handleOpen({ path: folderPath }, true);
+    await handleOpen({ path: folderPath, isDirectory: true }, true);
   };
 
   return (
@@ -244,6 +249,11 @@ const FileManager = () => {
             isOpen={isDownloadingDialogOpen}
             id={id}
             onClose={() => setIsDownloadingDialogOpen(false)}
+          />
+          <FilePreviewComponent
+            file={filePreview}
+            isOpen={isFilePreviewOpen}
+            onClose={() => setIsFilePreviewOpen(false)}
           />
         </>
       )}
