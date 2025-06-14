@@ -24,7 +24,8 @@ import ParticalBackground from "../../components/particles/ParticalBackground";
 import { Context } from "../../context/context";
 import { DeviceProvider } from "../../context/DeviceContext";
 import { WebSocketProvider } from "../../context/WebSocketProvider";
-import AllowedTo from "../../auth/AllowedTo";
+import IsAdmin from "../../auth/IsAdmin";
+import IsUser from "../../auth/IsUser";
 
 function Dashboard() {
   return (
@@ -58,14 +59,14 @@ function Dashboard() {
               <Route path="manage-users" element={<ManageUsers />} />
               <Route path="add-users" element={<AddUser />} />
               <Route path="manage-groups" element={<ManageGroups />} />
-              <Route path="link-user" element={<LinkUserToGroups />} />
+              <Route element={<IsUser to="/login" />}>
+                <Route path="link-user" element={<LinkUserToGroups />} />
+              </Route>
               <Route path="link-device" element={<LinkDeviceToUser />} />
             </Route>
 
             <Route path="settings" element={<Settings />} />
-            {/* <Route path="logs" element={<Logs />}>
-          <Route path=":logId" element={<LogsPage />} />
-        </Route> */}
+
             <Route path="/" element={<Overview />} />
           </Routes>
         </WebSocketProvider>

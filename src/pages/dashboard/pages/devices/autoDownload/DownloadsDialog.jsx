@@ -18,7 +18,9 @@ const DownloadsDoalog = ({ isOpen, id, onClose }) => {
   const { state, dispatch } = useDevice();
   const { socketRef } = useContext(WebSocketContext);
   useEffect(() => {
-    SetDownloadsList(state?.downloadList.downloads || []);
+    SetDownloadsList(
+      (state?.downloadList.device === id && state?.downloadList.downloads) || []
+    );
   }, [state?.downloadList]);
 
   useEffect(() => {

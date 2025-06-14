@@ -62,12 +62,20 @@ const FilePreviewComponent = ({ file, isOpen, onClose }) => {
           message.data.reviewFile.deviceUUID === id &&
           message.data.reviewFile.name === file.path
         ) {
-          const { chunk, done } = message.data.reviewFile;
+          console.log("Received file chunk:", message.data.reviewFile);
+          const { chunk, status } = message.data.reviewFile;
+          const done = status === "done";
 
           if (isImage || isVideo) {
-           setBase64Content((prev) => (prev || "") + (chunk || ""));
+            if (!chunk) return;
+
+            // Remove all trailing padding '=' from the chunk except if it's the last chunk
+            const cleanChunk = done ? chunk : chunk.replace(/=+$/, "");
+
+            setBase64Content((prev) => (prev || "") + cleanChunk);
           } else {
             try {
+              if (!chunk) return;
               const decoded = atob(chunk);
               setContent((prev) => prev + decoded);
             } catch (decodeErr) {
@@ -83,7 +91,6 @@ const FilePreviewComponent = ({ file, isOpen, onClose }) => {
         console.error("Failed to parse WebSocket message:", parseErr);
       }
     };
-
     socket.addEventListener("message", handleChunk);
 
     return () => {
@@ -102,7 +109,6 @@ const FilePreviewComponent = ({ file, isOpen, onClose }) => {
         </button>
         <h3>{file.name}</h3>
 
-        {console.log(base64Content)}
         {isImage ? (
           base64Content ? (
             <img

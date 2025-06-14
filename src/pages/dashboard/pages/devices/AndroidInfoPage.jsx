@@ -100,7 +100,7 @@ const AndroidInfoPage = () => {
       <h1 className="title">{language?.devices?.android_device_info}</h1>
 
       {loading ? (
-        <Loading />
+        <h1>Loading...</h1>
       ) : error ? (
         <p className="error">{error}</p>
       ) : deviceInfo && typeof deviceInfo === "object" ? (

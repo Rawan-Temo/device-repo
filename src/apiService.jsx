@@ -81,7 +81,9 @@ export const getAllUsers = async () => {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     });
+    console.log("All users response:", response.data);
     return response.data;
+    
   } catch (error) {
     console.error(
       "Error getting users:",
@@ -263,6 +265,7 @@ export const addUserToGroup = async (groupId, userId) => {
         },
       }
     );
+    console.log("User added to group response:", response.data);
     return response.data;
   } catch (error) {
     console.error(

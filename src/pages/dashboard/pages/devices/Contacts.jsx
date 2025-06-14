@@ -54,7 +54,6 @@ const Contacts = () => {
 
   // Initial fetch
   useEffect(() => {
-    console.log("Fetching contacts for device:", deviceId);
     dispatch({ type: "SET_CONTACT_LIST", payload: [] });
     setWsLoading(true);
     sendContactWS({ action: "get" });

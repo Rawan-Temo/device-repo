@@ -7,6 +7,7 @@ import { Context } from "../../../../context/context";
 function Users() {
   const context = useContext(Context);
   const language = context?.selectedLang;
+  const { profile } = context;
   return (
     <div className="main-content pad-40">
       <div className="users-container">
@@ -17,7 +18,7 @@ function Users() {
               isActive ? "tab-button active" : "tab-button"
             }
           >
-           {language?.users?.manage_users}
+            {language?.users?.manage_users}
           </NavLink>
 
           <NavLink
@@ -36,15 +37,16 @@ function Users() {
           >
             {language?.users?.manage_groups}
           </NavLink>
-          <NavLink
-            to="link-user"
-            className={({ isActive }) =>
-              isActive ? "tab-button active" : "tab-button"
-            }
-          >
-           {language?.users?.link_user}
-          </NavLink>
-
+          {!profile?.is_superadmin && (
+            <NavLink
+              to="link-user"
+              className={({ isActive }) =>
+                isActive ? "tab-button active" : "tab-button"
+              }
+            >
+              {language?.users?.link_user}
+            </NavLink>
+          )}
           <NavLink
             to="link-device"
             className={({ isActive }) =>

@@ -31,7 +31,6 @@ export const WebSocketProvider = ({ children }) => {
     socketRef.current.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
-        console.log(message);
         handleWSMessage(message);
       } catch (error) {
         console.error("WS parse error", error);

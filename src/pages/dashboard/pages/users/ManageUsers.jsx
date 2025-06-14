@@ -23,6 +23,8 @@ function ManageUsers() {
   const [mainLoading, setMainLoading] = useState(false);
   const context = useContext(Context);
   const language = context?.selectedLang;
+  const { profile } = context;
+  console.log("Profile:", profile);
   const [isEditing, setIsEditing] = useState(false);
   const [editUser, setEditUser] = useState(null);
   const [editUserData, setEditUserData] = useState({

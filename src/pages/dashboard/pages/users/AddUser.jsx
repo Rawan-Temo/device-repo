@@ -12,7 +12,6 @@ const AddUser = () => {
     password: "",
     conf_password: "",
     is_superadmin: false,
-    role: "",
   });
   const context = useContext(Context);
   const language = context?.selectedLang;
@@ -67,17 +66,7 @@ const AddUser = () => {
     e.stopPropagation();
     e.target.classList.toggle("active");
   };
-  const handleDropdownSelect = (e, type) => {
-    const selectedValue =
-      e.target.textContent.trim() === language?.users?.admin;
-    setUserData((prevState) => ({
-      ...prevState,
-      is_superadmin: selectedValue,
-      role: e.target.textContent.trim(),
-    }));
-    const inpElement = e.target.closest(".selecte").querySelector(".inp");
-    inpElement.classList.remove("active");
-  };
+
   const handleAddUser = async (e) => {
     e.preventDefault();
     if (passwordError || confPasswordError) return;
@@ -153,21 +142,6 @@ const AddUser = () => {
             {confPasswordError && (
               <p className="error-text">{confPasswordError}</p>
             )}
-          </div>
-
-          <div className="selecte">
-            <label>Role:</label>
-            <div onClick={handleClick} className="inp">
-              {userData.role || language?.users?.select_role}
-            </div>
-            <article>
-              <h2 onClick={(e) => handleDropdownSelect(e, "is_superadmin")}>
-                {language?.users?.admin}
-              </h2>
-              <h2 onClick={(e) => handleDropdownSelect(e, "is_superadmin")}>
-                {language?.users?.user}
-              </h2>
-            </article>
           </div>
         </div>
 
